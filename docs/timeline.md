@@ -1,174 +1,71 @@
 # Timeline de Cachy-caOS
 
-Fecha de creación: 2026-06-20
-
-Última actualización: 2026-06-20
-
----
+**Estado:** Vigente — registro histórico  
+**Última revisión:** 2026-07-16
 
 ## Propósito
 
-Este documento registra cronológicamente los eventos importantes relacionados con la evolución de Cachy-caOS.
+Registrar cronológicamente la evolución de Cachy-caOS sin confundir decisiones históricas con la arquitectura vigente.
 
-Su objetivo es preservar el contexto histórico del sistema, permitir su reconstrucción futura y documentar las decisiones más relevantes tomadas durante su desarrollo.
+## 2026-05 — Migración Ubuntu → CachyOS
 
----
+- Abandono de Ubuntu como sistema principal.
+- Adopción de CachyOS por rendimiento, control y personalización.
+- Inicio de la cultura de documentación y snapshots.
 
-# Línea temporal
+## 2026-05 — Era Omarchy
 
-## 2026-05
+- Omarchy se adopta como base inicial del escritorio.
+- Hyprland, Waybar y Walker pasan a formar el entorno principal.
+- Se traducen y personalizan componentes al español.
+- Se crean temas, wallpapers, PWAs y ajustes de teclado/audio.
 
-### Migración Ubuntu → CachyOS
+Esta etapa queda preservada en `docs/historico/era-omarchy/`.
 
-* Abandono de Ubuntu como sistema principal.
-* Inicio de la transición hacia CachyOS.
-* Búsqueda de mayor rendimiento, personalización y control del sistema.
+## 2026-06 — Formalización del proyecto
 
----
+- Creación del repositorio Cachy-caOS.
+- Registro de decisiones, configuraciones y guía de reconstrucción.
+- Consolidación de Btrfs + Snapper como mecanismo de recuperación.
+- Pruebas y posterior eliminación de Waydroid.
+- Personalización de SDDM.
 
-## 2026-05
+## 2026-06 / 2026-07 — Herramientas propias
 
-### Instalación de Omarchy
+- Creación del repositorio Liss para contexto y memoria del proyecto.
+- Nacimiento del concepto BFG Control Center.
+- Desarrollo de módulos propios para WebApps y keybinds.
+- Inicio de Nest UI como centro de administración.
 
-* Implementación de Omarchy como base del entorno gráfico.
-* Adopción de Hyprland como entorno principal.
+## 2026-07 — Independencia de Omarchy
 
----
+- Decisión de abandonar Omarchy como dependencia estructural.
+- CachyOS limpio + Hyprland limpio pasan a ser la base oficial.
+- Se conservan aprendizajes y componentes útiles, pero bajo control propio.
+- Nest se redefine como plataforma estable y modular, no como shell.
 
-## 2026-05
+## 2026-07 — Noctalia v5
 
-### Filosofía del sistema
+- Noctalia se adopta como shell actual.
+- Se establece que la shell debe ser reemplazable y no formar parte del Core.
+- Se investigan otras shells y la dirección futura del ecosistema Wayland.
 
-Se define la identidad del proyecto:
+## 2026-07 — Noctalia Greeter
 
-* Minimalismo.
-* Orden.
-* Funcionalidad.
-* Estabilidad.
-* Documentación.
+- Se estudia su arquitectura antes de instalarlo.
+- Se compila e instala Noctalia Greeter.
+- Se migra de SDDM a greetd.
+- Se resuelven requisitos de PAM y Polkit.
+- Se detecta una sesión `Hyprland (uwsm-managed)` inválida cuando `uwsm` no está instalado.
+- Se valida el inicio exitoso mediante la sesión `Hyprland`.
 
----
+## 2026-07 — Refactorización documental
 
-## 2026-05
+- README actualizado con la dirección independiente de Omarchy.
+- Creación de documentación canónica de Nest, metodología, roadmap, research e integraciones.
+- Separación explícita entre documentación vigente e histórica.
+- Inicio de una política de estados y revisiones documentales.
 
-### Traducción completa al español
+## Regla de mantenimiento
 
-Adaptación progresiva de Omarchy al español.
-
-Incluye:
-
-* Waybar.
-* Tooltips.
-* Walker.
-* Componentes asociados.
-
-Resultado:
-
-* Sistema completamente adaptado al idioma español.
-* Integración nativa con la experiencia diaria de uso.
-
----
-
-## 2026-05
-
-### Personalización visual
-
-Implementación de:
-
-* Tema Aether.
-* Iconos Papirus.
-* Elementos EVA/NERV.
-* Personalizaciones estéticas coherentes con la filosofía del proyecto.
-
----
-
-## 2026-05
-
-### EasyEffects
-
-* Configuración y ajuste de audio.
-* Implementación de perfil personalizado.
-
----
-
-## 2026-05
-
-### Teclado LATAM y ajustes de escritura
-
-* Correcciones de distribución.
-* Configuración de keyd.
-* Adaptación al uso diario en español.
-
----
-
-## 2026-05
-
-### Cultura Snapshot
-
-Se adopta el uso de snapshots Btrfs como mecanismo principal de seguridad y recuperación.
-
-Frase asociada:
-
-> Snapshot primero.
-
----
-
-## 2026-05 / 2026-06
-
-### PWAs
-
-Implementación de aplicaciones web integradas.
-
-Incluye:
-
-* ChatGPT.
-* Herramientas de trabajo.
-* Plataformas de streaming.
-
-Resultado:
-
-* Mayor integración con el entorno de escritorio.
-* Reducción de aplicaciones redundantes.
-
----
-
-## 2026-06
-
-### Waydroid
-
-* Instalación.
-* Configuración.
-* Pruebas.
-* Eliminación posterior tras evaluación.
-
-Resultado:
-
-* Experiencia documentada para futuras referencias.
-
----
-
-## 2026-06
-
-### Corrección de SDDM
-
-* Ajustes para resolución 2K.
-* Corrección visual del login.
-* Integración con Omarchy.
-
----
-
-## 2026-06
-
-### Creación del repositorio Cachy-caOS
-
-* Inicio de la documentación formal del proyecto.
-* Respaldo de configuraciones y decisiones importantes.
-
----
-
-# Historial de cambios
-
-## 2026-06-20
-
-* Documento creado.
-* Registrados los hitos históricos principales de Cachy-caOS.
+Los eventos nuevos deben añadirse aquí solo cuando cambien el estado, la dirección o el conocimiento reproducible del proyecto. Los detalles diarios deben vivir en documentos técnicos o changelogs específicos.
