@@ -1,139 +1,72 @@
 # Configuraciones importantes
 
-Fecha de creación: 2026-06-20
-
-Última actualización: 2026-06-20
-
----
+**Estado:** Vigente  
+**Última revisión:** 2026-07-16  
+**Histórico relacionado:** `docs/historico/era-omarchy/configuraciones-importantes-2026-06-20.md`
 
 ## Objetivo
 
-Registrar las configuraciones críticas de Cachy-caOS que permiten reconstruir o mantener el sistema correctamente.
+Registrar las configuraciones críticas que permiten mantener, diagnosticar y reconstruir Cachy-caOS sin depender de la memoria.
 
----
+## Base gráfica
 
-# Entorno gráfico
+- Compositor: Hyprland.
+- Shell actual: Noctalia v5.
+- Launcher y paneles: provistos actualmente por Noctalia.
+- Terminal: Kitty.
+- Shell interactiva: Fish.
 
-## Omarchy
+Nest debe permanecer desacoplado de Noctalia para permitir sustituir la shell sin alterar el Core.
 
-Base del entorno visual.
+## Inicio de sesión
 
-Componentes principales:
+- Display manager: greetd.
+- Greeter: Noctalia Greeter.
+- Sesión válida actual: `Hyprland`.
+- Evitar `Hyprland (uwsm-managed)` mientras `uwsm` no esté instalado.
+- TTY de recuperación: `getty@tty2.service` habilitado.
 
-* Hyprland
-* Waybar
-* Walker
+Documentación detallada: `docs/integraciones/noctalia-greeter.md`.
 
----
+## Identidad de aplicaciones
 
-# Waybar
+Las aplicaciones y WebApps deben mantener coherencia entre:
 
-Estado:
+- nombre del archivo `.desktop`;
+- `Icon=`;
+- `StartupWMClass=` cuando corresponda;
+- `class` o `app_id` real de la ventana;
+- iconos instalados en rutas estándar.
 
-* Traducida completamente al español.
+Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 
-Personalizaciones:
+## Teclado y shell
 
-* Traducción de módulos.
-* Traducción de tooltips.
-* Ajustes visuales compatibles con Omarchy.
+- Layout principal: LATAM.
+- Los procedimientos interactivos deben escribirse para Fish o indicar explícitamente cuando requieren Bash.
+- Nest debe detectar Fish, Bash o Zsh antes de generar comandos para copiar.
 
----
+## Audio y energía
 
-# Walker
+- EasyEffects disponible para perfiles de audio.
+- auto-cpufreq administra energía.
+- `power-profiles-daemon` no debe competir con auto-cpufreq.
 
-Estado:
+## WebApps
 
-* Traducido al español.
+- Backend propio `cachycaos-webapp`.
+- Navegador actual: Vivaldi.
+- Los `.desktop`, iconos y clases deben ser gestionados como una unidad.
 
-Uso principal:
+## Seguridad y recuperación
 
-* Lanzador de aplicaciones.
-* Apertura de PWAs.
-* Herramienta principal de búsqueda.
+- Btrfs + Snapper.
+- Snapshot antes de cambios de alto impacto.
+- Mantener backup previo al modificar PAM, display manager o archivos del sistema.
+- Toda migración debe incluir una ruta de rollback comprobable.
 
----
+## Regla operativa
 
-# Teclado
-
-Configuraciones:
-
-* Layout LATAM.
-* keyd.
-* Ajustes para escritura en español.
-
----
-
-# Audio
-
-## EasyEffects
-
-Estado:
-
-* Perfil personalizado configurado.
-
-Objetivo:
-
-* Mejorar calidad de sonido general.
-
----
-
-# PWAs
-
-PWAs utilizadas:
-
-* ChatGPT
-* Trabajo
-* Streaming
-
-Objetivo:
-
-* Mantener integración con el escritorio.
-* Reducir aplicaciones redundantes.
-
----
-
-# Personalización visual
-
-## Tema
-
-* Aether
-
-## Iconos
-
-* Papirus
-
-## Personalización EVA/NERV
-
-* Wallpapers.
-* Elementos visuales asociados.
-
----
-
-# Seguridad
-
-## Btrfs
-
-Uso obligatorio de snapshots antes de cambios importantes.
-
-Principio:
-
-> Snapshot primero.
-
----
-
-# SDDM
-
-Personalización realizada:
-
-* Corrección de resolución 2K.
-* Integración visual con Omarchy.
-
----
-
-# Historial de cambios
-
-## 2026-06-20
-
-* Documento creado.
-* Registradas configuraciones críticas del sistema.
+```text
+Diagnóstico → respaldo → cambio mínimo → verificación → documentación
+```
