@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+APP="$HOME/.local/share/cachycaos/modules/webapps/app.sh"
+
+[[ -x "$APP" ]] || {
+  echo "Error: no se encontró el módulo WebApps en $APP" >&2
+  exit 1
+}
+
+exec "$APP" "$@"
