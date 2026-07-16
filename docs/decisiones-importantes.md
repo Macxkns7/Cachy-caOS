@@ -2,7 +2,7 @@
 
 Fecha de creación: 2026-06-20
 
-Última actualización: 2026-06-20
+Última actualización: 2026-07-16
 
 ---
 
@@ -10,13 +10,13 @@ Fecha de creación: 2026-06-20
 
 Registrar las decisiones que dieron forma a Cachy-caOS y explicar por qué fueron tomadas.
 
-Este documento preserva el razonamiento detrás del sistema y permite comprender futuras elecciones sin depender de la memoria.
+Este documento preserva tanto las decisiones vigentes como las etapas históricas superadas, para comprender la evolución del sistema sin depender de la memoria.
 
 ---
 
 # CachyOS sobre Ubuntu
 
-Decisión:
+Decisión vigente:
 
 Migrar completamente desde Ubuntu hacia CachyOS.
 
@@ -29,24 +29,71 @@ Motivos:
 
 ---
 
-# Omarchy como entorno principal
+# Omarchy como etapa de aprendizaje
 
-Decisión:
+Decisión histórica, actualmente superada:
 
-Adoptar Omarchy como base del sistema.
+Omarchy fue adoptado inicialmente como base del entorno por su minimalismo, productividad e integración con Hyprland.
+
+Evolución:
+
+En julio de 2026 se decidió abandonar la dependencia estructural de Omarchy y avanzar hacia CachyOS + Hyprland limpios, conservando únicamente ideas, patrones o funciones que hayan demostrado valor real.
+
+Motivos del cambio:
+
+* Controlar las decisiones del sistema.
+* Evitar depender del ritmo y la dirección de un tercero.
+* Comprender y mantener cada componente.
+* Construir una arquitectura propia alrededor de Nest.
+
+---
+
+# Nest como plataforma de administración
+
+Decisión vigente:
+
+Nest no será una shell monolítica. Será la capa de administración modular de Cachy-caOS.
 
 Motivos:
 
-* Minimalismo.
-* Productividad.
-* Integración con Hyprland.
-* Filosofía cercana al proyecto.
+* Permitir cambiar shells sin afectar el Core.
+* Integrar herramientas externas bien construidas sin reimplementarlas.
+* Centralizar diagnóstico, configuración, backups, mantenimiento y recuperación.
+* Mantener interfaces visuales reemplazables.
+
+---
+
+# Core independiente de la shell
+
+Decisión vigente:
+
+Noctalia, Caelestia, Waybar u otra shell futura deben ser módulos intercambiables.
+
+Motivos:
+
+* El ecosistema Wayland evoluciona rápidamente.
+* Las funciones críticas no pueden depender de una interfaz concreta.
+* La estabilidad del sistema debe sobrevivir a cambios visuales.
+
+---
+
+# Adopción antes que fork
+
+Decisión vigente:
+
+No se creará una versión propia de una herramienta externa únicamente por estética, branding o entusiasmo.
+
+Nest adoptará e integrará proyectos bien diseñados. Solo se considerará un fork cuando existan necesidades técnicas reales que upstream no pueda o no quiera resolver.
+
+Primer caso validado:
+
+* Noctalia Greeter se adopta como backend de login administrado por Nest.
 
 ---
 
 # Minimalismo antes que complejidad
 
-Decisión:
+Decisión vigente:
 
 Mantener un sistema simple y ordenado.
 
@@ -67,7 +114,7 @@ Ejemplos:
 
 # Personalización con propósito
 
-Decisión:
+Decisión vigente:
 
 Toda personalización debe aportar valor real.
 
@@ -76,14 +123,15 @@ Motivos:
 * Evitar modificaciones únicamente estéticas.
 * Mantener coherencia visual.
 * Facilitar mantenimiento futuro.
+* Priorizar accesibilidad, integración o productividad.
 
 ---
 
-# PWAs en lugar de aplicaciones redundantes
+# PWAs y WebApps administradas
 
-Decisión:
+Decisión vigente:
 
-Utilizar PWAs cuando sea posible.
+Utilizar WebApps cuando resulten más coherentes que instalar aplicaciones redundantes, y administrarlas mediante Nest.
 
 Motivos:
 
@@ -94,23 +142,17 @@ Motivos:
 
 ---
 
-# Traducción completa al español
+# Español y adaptación al usuario
 
-Decisión:
+Decisión vigente:
 
-Traducir Omarchy y componentes asociados.
-
-Motivos:
-
-* Mejor experiencia diaria.
-* Mayor coherencia del entorno.
-* Sistema adaptado completamente al usuario.
+El sistema y las herramientas propias deben ofrecer una experiencia coherente en español, sin acoplarse a archivos internos de una distribución externa.
 
 ---
 
 # Snapshots como mecanismo principal de seguridad
 
-Decisión:
+Decisión vigente:
 
 Crear snapshots antes de cambios importantes.
 
@@ -126,25 +168,62 @@ Principio asociado:
 
 ---
 
+# Diagnóstico antes de modificación
+
+Decisión vigente:
+
+Los prerrequisitos y pasos de diagnóstico deben presentarse y ejecutarse antes de la solución final.
+
+Motivos:
+
+* Evitar cambios prematuros.
+* Mantener evidencia del estado anterior.
+* Reducir errores durante el troubleshooting.
+
+---
+
+# Fish como shell interactivo principal
+
+Decisión vigente:
+
+Las instrucciones para Cachy-caOS deben considerar Fish antes de usar sintaxis de Bash.
+
+Nest deberá detectar el shell y evitar depender de comandos copiados que cambien según Fish, Bash o Zsh.
+
+---
+
+# Migraciones reversibles
+
+Decisión vigente:
+
+Toda sustitución crítica debe incluir respaldo, validación y ruta de recuperación.
+
+Ejemplo aplicado:
+
+Durante la migración de SDDM a greetd + Noctalia Greeter se mantuvo SDDM instalado, se habilitó una TTY de rescate y se validaron PAM, Polkit, binarios, assets y sesiones antes del cambio final.
+
+---
+
 # Documentación obligatoria
 
-Decisión:
+Decisión vigente:
 
-Documentar configuraciones, hitos y decisiones.
+Documentar configuraciones, hitos, errores, procedimientos y decisiones.
 
 Motivos:
 
 * Reducir dependencia de la memoria.
 * Facilitar reconstrucción futura.
-* Mantener continuidad del proyecto.
+* Mantener continuidad entre chats y etapas.
+* Convertir experiencia real en funciones futuras de Nest.
 
 ---
 
 # Cachy-caOS como proyecto
 
-Decisión:
+Decisión vigente:
 
-Tratar el sistema operativo como un proyecto documentado.
+Tratar el sistema operativo como un proyecto documentado y reproducible.
 
 Motivos:
 
@@ -156,6 +235,13 @@ Motivos:
 ---
 
 # Historial de cambios
+
+## 2026-07-16
+
+* Omarchy reclasificado como etapa histórica superada.
+* Nest definido como plataforma de administración modular.
+* Registrados los principios de independencia de shell, adopción antes que fork, compatibilidad Fish y migraciones reversibles.
+* Noctalia Greeter reconocido como primera integración externa administrada.
 
 ## 2026-06-20
 
