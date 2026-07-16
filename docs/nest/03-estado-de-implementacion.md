@@ -9,7 +9,7 @@ Registrar qué partes de Nest existen hoy, qué decisiones ya están validadas y
 
 ## Estado general
 
-Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser una idea abstracta. Existe una base funcional en terminal, módulos propios y una dirección arquitectónica definida.
+Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser una idea abstracta. Existe una base funcional en terminal, módulos propios, código fuente versionado y una dirección arquitectónica definida.
 
 ## Componentes existentes
 
@@ -30,6 +30,28 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 
 Ambos módulos han sido probados de forma independiente y desde el lanzador principal.
 
+### WebApps v0.6 Beta
+
+Estado: **funcional y validado en el sistema real**.
+
+Capacidades confirmadas:
+
+- creación, listado y eliminación de WebApps;
+- generación automática de `StartupWMClass` para Vivaldi;
+- agrupación correcta entre acceso fijado y ventana Wayland;
+- nuevo comando `cachycaos-webapp repair`;
+- migración de Desktop Entries antiguas;
+- reparación idempotente sin duplicar claves;
+- actualización de la base XDG;
+- recarga opcional del dock de Noctalia.
+
+Código fuente canónico:
+
+```text
+src/bin/cachycaos-webapp
+src/modules/webapps/app.sh
+```
+
 ## Estructura observada en el sistema de desarrollo
 
 ```text
@@ -45,6 +67,19 @@ Ambos módulos han sido probados de forma independiente y desde el lanzador prin
 
 La estructura local todavía puede evolucionar antes de convertirse en un layout de instalación definitivo.
 
+## Estructura inicial del código fuente
+
+```text
+src/
+├── bin/
+│   └── cachycaos-webapp
+└── modules/
+    └── webapps/
+        └── app.sh
+```
+
+El instalador futuro será responsable de transformar el árbol `src/` en las rutas XDG del usuario.
+
 ## Decisiones firmes
 
 - Nest no será una shell.
@@ -53,6 +88,7 @@ La estructura local todavía puede evolucionar antes de convertirse en un layout
 - Los módulos deben ser independientes y reemplazables.
 - La configuración del usuario debe preservarse.
 - Toda operación sensible debe tener diagnóstico, respaldo y recuperación.
+- Los módulos deben poder reparar y migrar recursos creados por versiones anteriores.
 - Fish es el shell interactivo principal del sistema; los comandos mostrados al usuario deben ser compatibles con Fish o indicar explícitamente otro intérprete.
 
 ## Estado de Nest UI
@@ -84,9 +120,19 @@ Esto permite identificar la ventana de Nest desde Hyprland y shells compatibles.
 
 - Las rutas locales aún arrastran restos de reorganizaciones previas.
 - No existe todavía un instalador reproducible que despliegue binarios, iconos y archivos `.desktop`.
-- El mapeo de iconos de aplicaciones abiertas en el dock de Noctalia sigue en investigación.
 - El estado de versión aún no está centralizado.
 - Falta una interfaz estable entre los módulos y el Core.
+- WebApps todavía usa una convención específica de Vivaldi para calcular la identidad Wayland.
+
+## Problemas cerrados recientemente
+
+### Identidad e iconos de WebApps en Noctalia
+
+**Estado:** Resuelto en WebApps v0.6.
+
+La causa era la ausencia de `StartupWMClass` en las Desktop Entries. Noctalia no podía asociar las clases `vivaldi-<hostname>__-Default` con los IDs `cachycaos-webapp-*`, por lo que mostraba una segunda instancia con icono genérico.
+
+La solución quedó generalizada en el generador y en el motor de reparación; no se mantiene como un parche específico para ChatGPT o YouTube.
 
 ## Próximos hitos
 
@@ -94,8 +140,10 @@ Esto permite identificar la ventana de Nest desde Hyprland y shells compatibles.
 2. Normalizar estructura y rutas.
 3. Definir contratos de módulos.
 4. Crear diagnóstico común.
-5. Diseñar instalador y actualizador.
-6. Iniciar una interfaz gráfica sin acoplarla a la shell.
+5. Diseñar instalador y actualizador para desplegar `src/`.
+6. Incorporar el módulo Keybinds al árbol de código fuente.
+7. Diseñar adaptadores de identidad para otros navegadores.
+8. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
