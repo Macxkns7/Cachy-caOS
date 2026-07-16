@@ -31,11 +31,20 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | `nest/00-vision-y-principios.md` | Vigente | Constitución arquitectónica de Nest |
 | `nest/01-metodologia-operativa.md` | Vigente | Método de trabajo y seguridad |
 | `nest/02-roadmap-arquitectonico.md` | En desarrollo | Camino técnico a largo plazo |
+| `nest/03-estado-de-implementacion.md` | En desarrollo | Estado real de Nest UI, estructura y próximos hitos |
+
+## Módulos
+
+| Documento | Estado | Propósito |
+|---|---|---|
+| `modulos/webapps.md` | En desarrollo y funcional | Creación e integración de aplicaciones web |
+| `modulos/keybinds.md` | En desarrollo y funcional | Administración segura de atajos de Hyprland |
 
 ## Integraciones
 
 | Documento | Estado | Propósito |
 |---|---|---|
+| `integraciones/noctalia-v5.md` | Vigente con investigación abierta | Shell actual, IPC, Polkit y límites con Nest |
 | `integraciones/noctalia-greeter.md` | Vigente | greetd, PAM, Polkit, instalación y recuperación |
 
 ## Investigación
@@ -43,6 +52,8 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | Documento | Estado | Propósito |
 |---|---|---|
 | `research/2026-07-ecosistema-shells-y-direccion.md` | Vigente como research | Shells, Wayland y dirección futura |
+| `research/2026-07-herramientas-similares-a-nest.md` | Vigente como research | Proyectos adyacentes y estrategia de adopción |
+| `research/2026-07-roadmap-hyprland.md` | Vigente como research | Evolución de Hyprland e impacto arquitectónico |
 
 ## Histórico
 
@@ -60,9 +71,13 @@ Cada tema debe tener una sola fuente canónica:
 
 - visión y principios → `nest/00-vision-y-principios.md`;
 - metodología → `nest/01-metodologia-operativa.md`;
+- implementación de Nest → `nest/03-estado-de-implementacion.md`;
 - decisiones → `decisiones-importantes.md`;
 - estado técnico → `configuraciones-importantes.md`;
 - reconstrucción → `reconstruccion-desde-cero.md`;
+- WebApps → `modulos/webapps.md`;
+- Keybinds → `modulos/keybinds.md`;
+- Noctalia v5 → `integraciones/noctalia-v5.md`;
 - historia → `timeline.md`.
 
 Otros documentos deben enlazar estas fuentes en lugar de duplicarlas.
