@@ -1,17 +1,35 @@
 # Módulo WebApps
 
 **Estado:** En desarrollo y funcional  
+**Versión validada:** v0.6 Beta  
 **Última revisión:** 2026-07-16
 
 ## Propósito
 
-Permitir crear, lanzar y administrar aplicaciones web integradas al escritorio sin depender de un proceso manual distinto para cada sitio.
+Permitir crear, lanzar, listar, reparar y eliminar aplicaciones web integradas al escritorio sin depender de un proceso manual distinto para cada sitio.
+
+## Código fuente canónico
+
+```text
+src/bin/cachycaos-webapp
+src/modules/webapps/app.sh
+```
+
+El futuro instalador debe desplegarlos como:
+
+```text
+src/bin/cachycaos-webapp
+  → ~/.local/bin/cachycaos-webapp
+
+src/modules/webapps/app.sh
+  → ~/.local/share/cachycaos/modules/webapps/app.sh
+```
 
 ## Estado actual
 
 El módulo funciona con Vivaldi y genera archivos `.desktop` propios bajo el namespace de Cachy-caOS.
 
-Ejemplos existentes:
+Ejemplos:
 
 ```text
 cachycaos-webapp-chatgpt.desktop
@@ -19,82 +37,157 @@ cachycaos-webapp-youtube.desktop
 cachycaos-webapp-youtube-music.desktop
 ```
 
-El lanzador principal utilizado durante el desarrollo es:
+Rutas de ejecución y datos:
 
 ```text
 ~/.local/bin/cachycaos-webapp
-```
-
-Los módulos y datos han utilizado rutas como:
-
-```text
-~/.local/share/cachycaos/modules/webapps/
+~/.local/share/cachycaos/modules/webapps/app.sh
 ~/.local/share/cachycaos/webapps/
 ~/.local/share/cachycaos/webapps/icons/
+~/.local/share/applications/cachycaos-webapp-*.desktop
 ```
 
-Estas rutas deben normalizarse antes del instalador definitivo.
+## Capacidades v0.6
+
+- crear una WebApp desde nombre, URL e icono opcional;
+- normalizar URLs sin esquema;
+- obtener favicon o importar un icono local/remoto;
+- lanzar mediante Vivaldi en modo `--app`;
+- listar URL y `StartupWMClass` asociados;
+- eliminar `.desktop` e icono administrado;
+- reparar WebApps existentes;
+- regenerar o reemplazar `StartupWMClass` sin duplicarlo;
+- actualizar la base XDG de aplicaciones;
+- solicitar recarga del dock de Noctalia cuando está disponible.
 
 ## Flujo funcional
 
 ```text
 Nest WebApps
 ├── recibe nombre y URL
+├── normaliza el dominio
 ├── crea o importa icono
+├── calcula la identidad Wayland esperada
 ├── genera archivo .desktop
 ├── registra la WebApp
 └── la lanza mediante Vivaldi
 ```
 
-## Integración con el escritorio
+## Descubrimiento técnico: identidad de aplicaciones
 
-Las ventanas de Vivaldi exponen clases Wayland específicas por sitio, por ejemplo:
+Las ventanas de Vivaldi exponen clases Wayland específicas por sitio:
 
 ```text
-vivaldi-chatgpt.com__-Default
-vivaldi-www.youtube.com__-Default
+https://chatgpt.com
+→ vivaldi-chatgpt.com__-Default
+
+https://www.youtube.com
+→ vivaldi-www.youtube.com__-Default
+
+https://music.youtube.com
+→ vivaldi-music.youtube.com__-Default
 ```
 
-El archivo `.desktop`, el icono y la clase de la ventana deben poder relacionarse para que launchers y docks muestren correctamente la identidad de la aplicación.
+Noctalia intenta relacionar una ventana activa con una Desktop Entry comparando el `app_id` de la ventana con:
 
-## Problema abierto: iconos de ventanas activas
+- el ID del archivo `.desktop`;
+- `StartupWMClass`;
+- `Name`.
 
-Noctalia muestra correctamente el icono en el launcher, pero algunas WebApps aparecen sin icono en el dock cuando están abiertas.
+Cuando no encuentra coincidencia crea una identidad provisional para la ventana. El síntoma observado era:
 
-Hipótesis actualmente relevantes:
+- el acceso fijado mostraba el icono correcto;
+- al abrirlo aparecía una segunda entrada con icono genérico de engranaje;
+- las ventanas ya abiertas no heredaban el icono de la WebApp.
 
-- el dock resuelve por `app_id` o clase de ventana y no por el nombre del `.desktop`;
-- falta `StartupWMClass` o un identificador equivalente;
-- el mapeo entre clase Vivaldi y desktop entry no coincide;
-- Noctalia puede tener limitaciones al resolver rutas absolutas de iconos o aplicaciones web de Chromium/Vivaldi.
+### Causa raíz
 
-Este problema debe resolverse de forma general, porque Nest crea aplicaciones que después deben integrarse correctamente con cualquier shell compatible.
+Los `.desktop` antiguos no declaraban `StartupWMClass`, mientras la clase real de Vivaldi no coincidía con el ID `cachycaos-webapp-*`.
+
+### Solución v0.6
+
+El módulo calcula automáticamente:
+
+```text
+StartupWMClass=vivaldi-<hostname>__-Default
+```
+
+Ejemplo generado:
+
+```ini
+[Desktop Entry]
+Name=ChatGPT
+Exec=/home/usuario/.local/bin/cachycaos-webapp launch "https://chatgpt.com"
+Icon=/home/usuario/.local/share/cachycaos/webapps/icons/chatgpt.png
+StartupWMClass=vivaldi-chatgpt.com__-Default
+```
+
+## Motor de reparación
+
+Comando:
+
+```bash
+cachycaos-webapp repair
+```
+
+Proceso:
+
+1. localiza todos los `cachycaos-webapp-*.desktop`;
+2. lee `X-CachycaOS-WebApp-URL`;
+3. calcula el hostname y la clase esperada;
+4. crea o reemplaza `StartupWMClass`;
+5. evita claves duplicadas;
+6. valida la Desktop Entry;
+7. actualiza la base de aplicaciones;
+8. recarga el dock de Noctalia cuando existe.
+
+La reparación fue validada eliminando manualmente `StartupWMClass` de ChatGPT y confirmando que el módulo la restauraba correctamente.
+
+## Validación realizada
+
+- WebApps antiguas migradas correctamente.
+- ChatGPT agrupado con su icono fijado.
+- YouTube agrupado con su icono fijado.
+- Creación de una WebApp nueva sin parche manual.
+- Persistencia tras recargar el dock.
+- Recuperación automática de una clave eliminada.
+- Ausencia de segunda instancia con engranaje.
 
 ## Lecciones de rutas e instalación
 
-Durante el desarrollo se detectó que `xdg-user-dir DOWNLOAD` devolvía `/home/macx` porque no existía `~/.config/user-dirs.dirs`, mientras el archivo real estaba en `~/Downloads`.
+Durante el desarrollo se detectó que `xdg-user-dir DOWNLOAD` podía devolver una ruta incorrecta cuando no existía `~/.config/user-dirs.dirs`, mientras el archivo real estaba en `~/Downloads`.
 
 Reglas para el instalador:
 
 - no asumir `Descargas` ni `Downloads`;
 - validar la ruta antes de copiar;
 - permitir selección explícita de archivo;
-- almacenar los iconos finales dentro del espacio administrado por Nest;
-- actualizar cachés de iconos solo después de validar la instalación;
-- crear archivos `.desktop` reproducibles y portables.
+- almacenar iconos finales dentro del espacio administrado por Nest;
+- actualizar cachés solo después de validar la instalación;
+- crear archivos `.desktop` reproducibles y portables;
+- instalar código desde `src/` hacia rutas XDG del usuario.
 
-## Requisitos futuros
+## Limitaciones actuales
 
-- edición y eliminación segura;
-- detección de duplicados;
-- validación de URL;
-- descarga o selección de iconos;
-- resolución estable de `StartupWMClass`/`app_id`;
-- backups antes de modificar entradas existentes;
-- importación de WebApps ya creadas;
-- soporte por adaptadores para otros navegadores;
-- diagnóstico de integración con launcher y dock.
+- El cálculo de identidad está diseñado para el formato actual de Vivaldi.
+- La recarga de Noctalia es una integración opcional y no una dependencia del Core.
+- Aún no existe un adaptador universal para Brave, Chromium, Edge o Firefox.
+- El favicon de Google puede no ser suficiente para todos los sitios.
+
+## Evolución futura
+
+Una versión posterior puede aprender la identidad real de una ventana:
+
+```text
+crear WebApp
+→ lanzarla temporalmente
+→ observar app_id mediante el compositor
+→ guardar la identidad real
+→ cerrar la ejecución de aprendizaje
+```
+
+Esto permitiría soportar distintos navegadores sin codificar previamente su convención de clases.
 
 ## Principio arquitectónico
 
-El módulo WebApps no debe depender internamente de Noctalia. Debe producir entradas XDG correctas y dejar que cada shell las consuma mediante un adaptador o integración específica cuando sea necesario.
+El módulo WebApps no debe depender internamente de Noctalia. Debe producir entradas XDG correctas. Las recargas, diagnósticos o comportamientos específicos de una shell deben permanecer como integraciones opcionales y reemplazables.
