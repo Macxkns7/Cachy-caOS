@@ -20,7 +20,8 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 - Interfaz terminal construida con Bash y `gum`.
 - Ejecución integrada con Kitty.
 - Acceso desde un archivo `.desktop`.
-- Identidad visual propia mediante el icono `nest-ui`.
+- Identidad de ventana propia mediante la clase `nest-ui`.
+- Icono administrado por Nest desde `~/.local/share/cachycaos/assets/icons/nest-ui.png`.
 - Nombre y descripción pública: **Nest UI — Centro de administración de Cachy-caOS**.
 
 ### Módulos funcionales
@@ -57,6 +58,9 @@ src/modules/webapps/app.sh
 ```text
 ~/.local/share/cachycaos/
 ├── app.sh
+├── assets/
+│   └── icons/
+│       └── nest-ui.png
 ├── core/
 │   └── nest/
 ├── modules/
@@ -71,6 +75,11 @@ La estructura local todavía puede evolucionar antes de convertirse en un layout
 
 ```text
 src/
+├── applications/
+│   └── nest-ui.desktop.in
+├── assets/
+│   └── icons/
+│       └── nest-ui.png
 ├── bin/
 │   └── cachycaos-webapp
 └── modules/
@@ -78,7 +87,7 @@ src/
         └── app.sh
 ```
 
-El instalador futuro será responsable de transformar el árbol `src/` en las rutas XDG del usuario.
+El instalador futuro será responsable de transformar el árbol `src/` en las rutas XDG del usuario y de sustituir los marcadores de las plantillas por rutas absolutas.
 
 ## Decisiones firmes
 
@@ -89,6 +98,8 @@ El instalador futuro será responsable de transformar el árbol `src/` en las ru
 - La configuración del usuario debe preservarse.
 - Toda operación sensible debe tener diagnóstico, respaldo y recuperación.
 - Los módulos deben poder reparar y migrar recursos creados por versiones anteriores.
+- Los recursos visuales propios deben vivir bajo el árbol administrado por Nest.
+- Las Desktop Entries generadas deben usar rutas absolutas para assets propios cuando la resolución por tema no sea fiable.
 - Fish es el shell interactivo principal del sistema; los comandos mostrados al usuario deben ser compatibles con Fish o indicar explícitamente otro intérprete.
 
 ## Estado de Nest UI
@@ -107,19 +118,27 @@ La v0.4 debe consolidar:
 
 ## Acceso desde el escritorio
 
-El archivo `.desktop` usa una clase propia de Kitty:
+La ventana de Nest usa una clase propia de Kitty:
 
 ```text
 class = nest-ui
 title = Nest UI
 ```
 
-Esto permite identificar la ventana de Nest desde Hyprland y shells compatibles.
+La Desktop Entry validada usa:
+
+```ini
+Exec=kitty --class nest-ui --title "Nest UI" -e /home/<usuario>/.local/share/cachycaos/app.sh
+Icon=/home/<usuario>/.local/share/cachycaos/assets/icons/nest-ui.png
+StartupWMClass=nest-ui
+```
+
+La combinación fue comprobada en el sistema real: el icono aparece correctamente tanto en el launcher como en el dock de Noctalia.
 
 ## Riesgos abiertos
 
 - Las rutas locales aún arrastran restos de reorganizaciones previas.
-- No existe todavía un instalador reproducible que despliegue binarios, iconos y archivos `.desktop`.
+- No existe todavía un instalador reproducible que despliegue binarios, assets y archivos `.desktop`.
 - El estado de versión aún no está centralizado.
 - Falta una interfaz estable entre los módulos y el Core.
 - WebApps todavía usa una convención específica de Vivaldi para calcular la identidad Wayland.
@@ -133,6 +152,20 @@ Esto permite identificar la ventana de Nest desde Hyprland y shells compatibles.
 La causa era la ausencia de `StartupWMClass` en las Desktop Entries. Noctalia no podía asociar las clases `vivaldi-<hostname>__-Default` con los IDs `cachycaos-webapp-*`, por lo que mostraba una segunda instancia con icono genérico.
 
 La solución quedó generalizada en el generador y en el motor de reparación; no se mantiene como un parche específico para ChatGPT o YouTube.
+
+### Icono genérico de Nest UI
+
+**Estado:** Resuelto y validado.
+
+La clase de ventana y `StartupWMClass` ya coincidían correctamente como `nest-ui`. El engranaje persistía porque `Icon=nest-ui` dependía de la resolución del tema `hicolor` y de sus cachés.
+
+La solución validada fue mover el icono al árbol administrado por Nest y utilizar su ruta absoluta en la Desktop Entry:
+
+```text
+~/.local/share/cachycaos/assets/icons/nest-ui.png
+```
+
+Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctalia.
 
 ## Próximos hitos
 
