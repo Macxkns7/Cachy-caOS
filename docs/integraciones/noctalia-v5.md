@@ -1,7 +1,7 @@
 # Integración de Noctalia v5
 
 **Estado:** Vigente con investigación abierta  
-**Última revisión:** 2026-07-16
+**Última revisión:** 2026-07-17
 
 ## Rol en Cachy-caOS
 
@@ -69,7 +69,7 @@ Comandos comprobados directamente:
 ```text
 noctalia msg panel-toggle launcher
 noctalia msg screenshot-region
-noctalia msg screenshot-fullscreen
+noctalia msg screenshot-fullscreen all
 ```
 
 El launcher fue validado correctamente con:
@@ -77,6 +77,15 @@ El launcher fue validado correctamente con:
 ```text
 noctalia msg panel-toggle launcher
 ```
+
+Las capturas fueron validadas correctamente con:
+
+```text
+noctalia msg screenshot-region
+noctalia msg screenshot-fullscreen all
+```
+
+La captura regional abre el selector de área y la captura completa funciona sin que estén instalados `grim`, `slurp`, `satty`, `swappy` ni `grimblast`. En esta instalación, por tanto, Nest no debe instalar esas herramientas por suposición.
 
 Nest debe preferir esta IPC pública cuando exista y evitar modificar archivos internos de Noctalia sin necesidad.
 
@@ -114,6 +123,7 @@ Modelo correcto:
 
 ```text
 tecla física
+→ evento XKB/Wayland
 → binding de Hyprland
 → acción pública de Noctalia
 ```
@@ -135,12 +145,28 @@ La instalación limpia observada incluía un binding hacia `hyprlauncher`, aunqu
 Nest debería poder ofrecer un perfil declarativo y reversible para funciones comunes:
 
 ```text
-Super           → launcher
-Print           → captura de región
-Shift + Print   → captura de pantalla completa
-XF86Audio*      → volumen, mute y multimedia
-XF86MonBrightness* → brillo
+Super                 → launcher
+captura regional      → screenshot-region
+captura completa      → screenshot-fullscreen all
+XF86Audio*            → volumen, mute y multimedia
+XF86MonBrightness*    → brillo
 ```
+
+El perfil debe definir acciones lógicas, no asumir que todos los teclados emiten las mismas teclas. En el Lenovo ThinkBook comprobado, la tecla física `ImpPt` tiene dos capas de firmware:
+
+```text
+ImpPt sola      → XF86SelectiveScreenshot → keycode XKB 642
+Fn + ImpPt      → Print                   → keycode XKB 107
+```
+
+Los bindings funcionales en la configuración Lua de Hyprland quedaron como:
+
+```lua
+hl.bind("code:642", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind("code:107", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen all"))
+```
+
+Estos códigos son específicos del evento observado y no deben convertirse en valores universales del perfil. Nest debe detectar o pedir confirmación del evento real del equipo antes de aplicarlos.
 
 Este perfil no debe escribirse de forma opaca ni apropiarse de toda la configuración de Hyprland. Debe administrarse desde el módulo Keybinds y mostrar previamente los cambios y colisiones.
 
@@ -171,13 +197,39 @@ Launcher:
 - corregido usando `noctalia msg panel-toggle launcher`
 
 Capturas:
-- sin binding para Print
+- sin bindings funcionales al inicio
 - sin grim, slurp, satty, swappy ni grimblast
-- Noctalia expone acciones de captura
-- backend y dependencias aún pendientes de validar
+- Noctalia expone y ejecuta sus acciones de captura
+- bindings corregidos usando los keycodes XKB observados con `wev`
 ```
 
-Nest Doctor no debe limitarse a comprobar si un comando existe. Debe comprender la relación entre tecla, binding, proveedor de la acción y dependencia real.
+Nest Doctor no debe limitarse a comprobar si un comando existe. Debe comprender la relación entre tecla física, evento emitido, binding, proveedor de la acción y dependencia real.
+
+## Diagnóstico de teclas especiales
+
+Las teclas `Fn` no deben modelarse como un modificador universal. En muchos portátiles, el firmware transforma la combinación y emite un evento diferente, a veces incluso desde otro dispositivo de entrada.
+
+En el ThinkBook comprobado:
+
+```text
+ImpPt sola
+→ dispositivo: ideapad-extra-buttons
+→ kernel/libinput: KEY_SELECTIVE_SCREENSHOT (634)
+→ Wayland/XKB mediante wev: XF86SelectiveScreenshot, key 642
+
+Fn + ImpPt
+→ dispositivo: AT Translated Set 2 keyboard
+→ kernel/libinput: KEY_SYSRQ (99), junto a KEY_WAKEUP
+→ Wayland/XKB mediante wev: Print, key 107
+```
+
+El nombre `ideapad-extra-buttons` corresponde al controlador del kernel utilizado por Lenovo y no implica que el equipo sea necesariamente un IdeaPad.
+
+Regla operativa:
+
+> Para bindings `code:<n>` de Hyprland, la fuente de verdad debe ser el keycode mostrado por `wev`, no el código evdev mostrado por `libinput debug-events`.
+
+`libinput` sigue siendo útil para identificar el dispositivo físico y el evento del kernel, pero sus números no deben copiarse directamente a `code:` en Hyprland.
 
 ## Fallback y degradación elegante
 
@@ -261,7 +313,7 @@ Nest no debe copiar el sistema de plugins de Noctalia. Puede:
 - adaptadores hacia Noctalia y otras shells;
 - selección del proveedor adecuado para cada acción.
 
-## Investigación abierta: capturas
+## Capturas: validación completada
 
 La instalación limpia comprobada no contiene:
 
@@ -273,23 +325,20 @@ swappy
 grimblast
 ```
 
-Noctalia sí expone:
+Noctalia sí ejecuta correctamente:
 
 ```text
 noctalia msg screenshot-region
-noctalia msg screenshot-fullscreen
+noctalia msg screenshot-fullscreen all
 ```
 
-Debe investigarse:
+Conclusiones:
 
-- si Noctalia implementa internamente la captura;
-- si invoca un backend externo;
-- qué dependencias recomienda oficialmente;
-- dónde guarda los archivos;
-- cómo maneja portales y permisos de screencopy;
-- qué comportamiento presenta cuando el backend falta.
-
-Hasta completar esa validación, Nest no debe instalar herramientas de captura por suposición.
+- la captura regional y la captura completa están operativas;
+- no fue necesario instalar un backend externo adicional;
+- Nest debe probar primero la IPC disponible;
+- una dependencia no debe instalarse solo porque sea habitual en otras configuraciones Wayland;
+- siguen pendientes de documentar la ruta de guardado, portales, permisos de screencopy y comportamiento ante fallos internos.
 
 ## Investigación abierta: iconos del dock
 
@@ -322,7 +371,7 @@ Líneas de investigación:
 
 ## Regla para Nest
 
-La integración debe basarse en capacidades, no en suposiciones sobre una versión o instalación concreta:
+La integración debe basarse en capacidades, no en suposiciones sobre una versión, fabricante o instalación concreta:
 
 ```text
 detectar → consultar capacidades → validar → proponer → respaldar → aplicar → comprobar → poder revertir
