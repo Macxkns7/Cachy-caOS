@@ -7,7 +7,23 @@
 
 Noctalia v5 es la shell visual actual sobre Hyprland. Proporciona barra, launcher, dock, paneles, notificaciones, widgets, lockscreen, temas y servicios de interacción diaria.
 
-Noctalia no forma parte del Core de Nest. Debe considerarse una implementación reemplazable conectada mediante adaptadores.
+Noctalia no forma parte del Core de Nest. Debe considerarse una implementación reemplazable conectada mediante un adaptador de integración.
+
+El nombre conceptual de esta capa es:
+
+```text
+Noctalia Integration
+```
+
+Este patrón debe poder replicarse para otras shells sin modificar el Core:
+
+```text
+Nest Core
+├── Noctalia Integration
+├── Caelestia Integration
+├── Shell futura Integration
+└── fallback Hyprland / herramientas estándar
+```
 
 ## Ubicaciones observadas
 
@@ -26,27 +42,164 @@ Otros datos aparecen bajo:
 
 La configuración personal actualmente incluye barra, dock, idle, plugins, shell, tema, wallpaper y widgets.
 
-## Comandos de administración
+## IPC pública
 
-Noctalia ofrece IPC mediante:
+Noctalia ofrece una interfaz de comandos mediante:
 
 ```text
 noctalia msg <comando>
 ```
 
-Capacidades útiles para una futura integración con Nest:
+La instalación actual expone, entre otras, estas familias de acciones:
 
-- `config-reload`;
-- `dock-show`, `dock-hide`, `dock-toggle`, `dock-reload`;
-- `settings-open` y `settings-toggle`;
-- `panel-open` y `panel-toggle`;
-- control de Wi-Fi, Bluetooth, brillo y volumen;
-- sincronización del greeter;
-- gestión de plugins;
-- wallpaper y temas;
-- sesión, bloqueo y energía.
+- paneles, launcher y ajustes;
+- barra y dock;
+- volumen, micrófono y reproducción multimedia;
+- brillo;
+- Wi-Fi y Bluetooth;
+- capturas de pantalla;
+- wallpaper, temas y plantillas;
+- notificaciones;
+- bloqueo, energía y sesión;
+- plugins y widgets;
+- perfiles de EasyEffects.
 
-Nest debe usar IPC público cuando exista y evitar modificar internamente archivos de Noctalia sin necesidad.
+Comandos comprobados directamente:
+
+```text
+noctalia msg panel-toggle launcher
+noctalia msg screenshot-region
+noctalia msg screenshot-fullscreen
+```
+
+El launcher fue validado correctamente con:
+
+```text
+noctalia msg panel-toggle launcher
+```
+
+Nest debe preferir esta IPC pública cuando exista y evitar modificar archivos internos de Noctalia sin necesidad.
+
+## Modelo de integración
+
+La responsabilidad debe separarse por capas:
+
+```text
+Nest
+├── Nest Core
+│   ├── estado declarativo
+│   ├── diagnóstico
+│   ├── backups y rollback
+│   └── perfiles de integración
+├── Adaptador Noctalia
+│   ├── detección de versión y disponibilidad
+│   ├── validación de IPC
+│   ├── traducción de acciones de Nest a `noctalia msg`
+│   ├── comprobación de dependencias externas
+│   └── degradación controlada
+└── Adaptador Hyprland
+    ├── keybinds
+    ├── ventanas
+    ├── workspaces
+    └── reglas del compositor
+```
+
+Nest no debe tratar a Noctalia como una dependencia absoluta. Debe detectar sus capacidades en tiempo de ejecución y habilitar únicamente las integraciones disponibles.
+
+## Atajos y responsabilidades
+
+Los bindings pertenecen al compositor. Noctalia expone acciones; Hyprland decide qué tecla las ejecuta.
+
+Modelo correcto:
+
+```text
+tecla física
+→ binding de Hyprland
+→ acción pública de Noctalia
+```
+
+Ejemplo validado:
+
+```text
+Super
+→ Hyprland binding con release
+→ noctalia msg panel-toggle launcher
+```
+
+Esto evita depender de launchers externos cuando Noctalia ya ofrece esa capacidad.
+
+La instalación limpia observada incluía un binding hacia `hyprlauncher`, aunque el ejecutable no estaba instalado. La corrección fue reemplazarlo por la IPC oficial de Noctalia y añadir la apertura mediante la tecla Super al soltarla.
+
+## Perfil Noctalia Standard
+
+Nest debería poder ofrecer un perfil declarativo y reversible para funciones comunes:
+
+```text
+Super           → launcher
+Print           → captura de región
+Shift + Print   → captura de pantalla completa
+XF86Audio*      → volumen, mute y multimedia
+XF86MonBrightness* → brillo
+```
+
+Este perfil no debe escribirse de forma opaca ni apropiarse de toda la configuración de Hyprland. Debe administrarse desde el módulo Keybinds y mostrar previamente los cambios y colisiones.
+
+El perfil representa una propuesta de integración de Nest, no una obligación impuesta por Noctalia.
+
+## Auditoría de capacidades
+
+El adaptador debe distinguir al menos cuatro estados:
+
+```text
+1. Acción disponible y binding correcto
+2. Acción disponible, pero sin binding
+3. Binding presente, pero comando inexistente
+4. Acción declarada, pero falta una dependencia externa
+```
+
+Ejemplos observados en la instalación limpia:
+
+```text
+Brillo:
+- bindings presentes
+- `brightnessctl` ausente
+- corregido instalando la dependencia
+
+Launcher:
+- binding presente hacia `hyprlauncher`
+- ejecutable ausente
+- corregido usando `noctalia msg panel-toggle launcher`
+
+Capturas:
+- sin binding para Print
+- sin grim, slurp, satty, swappy ni grimblast
+- Noctalia expone acciones de captura
+- backend y dependencias aún pendientes de validar
+```
+
+Nest Doctor no debe limitarse a comprobar si un comando existe. Debe comprender la relación entre tecla, binding, proveedor de la acción y dependencia real.
+
+## Fallback y degradación elegante
+
+Cada acción integrada debe definir una cadena de resolución, por ejemplo:
+
+```text
+launcher:
+1. Noctalia IPC
+2. launcher configurado por el usuario
+3. alternativa estándar disponible
+4. diagnóstico sin aplicar cambios destructivos
+```
+
+```text
+captura:
+1. Noctalia IPC, si está operativa
+2. backend Wayland configurado
+3. sugerencia de instalación
+4. estado no disponible claramente informado
+```
+
+Si Noctalia cambia o se reemplaza, los módulos del Core deben seguir funcionando. Solo el adaptador visual debe requerir ajustes.
 
 ## Agente Polkit
 
@@ -87,7 +240,15 @@ Nest no debe copiar el sistema de plugins de Noctalia. Puede:
 - paneles y widgets;
 - notificaciones;
 - lockscreen;
-- aplicación visual de temas.
+- aplicación visual de temas;
+- exposición de acciones mediante IPC.
+
+### Hyprland
+
+- registro de keybinds;
+- ventanas y workspaces;
+- reglas del compositor;
+- ejecución de las acciones asociadas a teclas.
 
 ### Nest
 
@@ -96,7 +257,39 @@ Nest no debe copiar el sistema de plugins de Noctalia. Puede:
 - backups y rollback;
 - instalación y migración;
 - administración de módulos propios;
-- adaptadores hacia Noctalia y otras shells.
+- perfiles de atajos;
+- adaptadores hacia Noctalia y otras shells;
+- selección del proveedor adecuado para cada acción.
+
+## Investigación abierta: capturas
+
+La instalación limpia comprobada no contiene:
+
+```text
+grim
+slurp
+satty
+swappy
+grimblast
+```
+
+Noctalia sí expone:
+
+```text
+noctalia msg screenshot-region
+noctalia msg screenshot-fullscreen
+```
+
+Debe investigarse:
+
+- si Noctalia implementa internamente la captura;
+- si invoca un backend externo;
+- qué dependencias recomienda oficialmente;
+- dónde guarda los archivos;
+- cómo maneja portales y permisos de screencopy;
+- qué comportamiento presenta cuando el backend falta.
+
+Hasta completar esa validación, Nest no debe instalar herramientas de captura por suposición.
 
 ## Investigación abierta: iconos del dock
 
@@ -129,4 +322,10 @@ Líneas de investigación:
 
 ## Regla para Nest
 
-Las integraciones deben degradarse con elegancia: si Noctalia cambia o se reemplaza, los módulos del Core deben seguir funcionando y solamente el adaptador visual requerir ajustes.
+La integración debe basarse en capacidades, no en suposiciones sobre una versión o instalación concreta:
+
+```text
+detectar → consultar capacidades → validar → proponer → respaldar → aplicar → comprobar → poder revertir
+```
+
+Noctalia Integration será el primer adaptador de shell y el modelo de referencia para futuras integraciones.
