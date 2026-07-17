@@ -21,7 +21,7 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 - Ejecución integrada con Kitty.
 - Acceso desde un archivo `.desktop`.
 - Identidad de ventana propia mediante la clase `nest-ui`.
-- Icono administrado por Nest desde `~/.local/share/cachycaos/assets/icons/nest-ui.png`.
+- Icono instalado y administrado por Nest desde `~/.local/share/cachycaos/assets/icons/nest-ui.png`.
 - Nombre y descripción pública: **Nest UI — Centro de administración de Cachy-caOS**.
 
 ### Módulos funcionales
@@ -79,13 +79,15 @@ src/
 │   └── nest-ui.desktop.in
 ├── assets/
 │   └── icons/
-│       └── nest-ui.png
+│       └── README.md
 ├── bin/
 │   └── cachycaos-webapp
 └── modules/
     └── webapps/
         └── app.sh
 ```
+
+La ubicación canónica reservada para el binario del icono es `src/assets/icons/nest-ui.png`. Su importación al repositorio continúa pendiente; el archivo actualmente validado reside en el sistema de desarrollo.
 
 El instalador futuro será responsable de transformar el árbol `src/` en las rutas XDG del usuario y de sustituir los marcadores de las plantillas por rutas absolutas.
 
@@ -139,6 +141,7 @@ La combinación fue comprobada en el sistema real: el icono aparece correctament
 
 - Las rutas locales aún arrastran restos de reorganizaciones previas.
 - No existe todavía un instalador reproducible que despliegue binarios, assets y archivos `.desktop`.
+- El binario maestro `src/assets/icons/nest-ui.png` aún debe importarse desde el sistema de desarrollo.
 - El estado de versión aún no está centralizado.
 - Falta una interfaz estable entre los módulos y el Core.
 - WebApps todavía usa una convención específica de Vivaldi para calcular la identidad Wayland.
@@ -155,7 +158,7 @@ La solución quedó generalizada en el generador y en el motor de reparación; n
 
 ### Icono genérico de Nest UI
 
-**Estado:** Resuelto y validado.
+**Estado:** Resuelto y validado en el sistema de desarrollo.
 
 La clase de ventana y `StartupWMClass` ya coincidían correctamente como `nest-ui`. El engranaje persistía porque `Icon=nest-ui` dependía de la resolución del tema `hicolor` y de sus cachés.
 
@@ -165,18 +168,19 @@ La solución validada fue mover el icono al árbol administrado por Nest y utili
 ~/.local/share/cachycaos/assets/icons/nest-ui.png
 ```
 
-Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctalia.
+Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctalia. La plantilla y el contrato de instalación ya están versionados; solo falta importar el PNG maestro al árbol `src/assets/icons/`.
 
 ## Próximos hitos
 
-1. Cerrar la v0.4 de la TUI.
-2. Normalizar estructura y rutas.
-3. Definir contratos de módulos.
-4. Crear diagnóstico común.
-5. Diseñar instalador y actualizador para desplegar `src/`.
-6. Incorporar el módulo Keybinds al árbol de código fuente.
-7. Diseñar adaptadores de identidad para otros navegadores.
-8. Iniciar una interfaz gráfica sin acoplarla a la shell.
+1. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+2. Cerrar la v0.4 de la TUI.
+3. Normalizar estructura y rutas.
+4. Definir contratos de módulos.
+5. Crear diagnóstico común.
+6. Diseñar instalador y actualizador para desplegar `src/`.
+7. Incorporar el módulo Keybinds al árbol de código fuente.
+8. Diseñar adaptadores de identidad para otros navegadores.
+9. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
