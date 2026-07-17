@@ -7,7 +7,36 @@
 
 Administrar atajos de Hyprland desde Nest sin convertir la configuración del usuario en un archivo opaco ni sobrescribir personalizaciones manuales.
 
-El módulo también debe auditar que cada binding apunte a una acción realmente disponible y comprender cuándo esa acción pertenece a una shell integrada, a Hyprland o a una herramienta externa.
+El módulo debe comprender la cadena completa:
+
+```text
+tecla física
+→ dispositivo de entrada
+→ evento kernel/evdev
+→ evento Wayland/XKB
+→ binding de Hyprland
+→ acción lógica
+→ proveedor
+→ comando y dependencias
+```
+
+No basta con escribir combinaciones de teclas. Nest debe descubrir qué existe, entender qué emite cada tecla y proponer un perfil basado en evidencia.
+
+## Principio central: descubrir antes de configurar
+
+Nest no debe aplicar un perfil universal de teclado. Debe:
+
+```text
+1. detectar dispositivos de entrada
+2. inventariar teclas estándar, multimedia, de sistema y especiales
+3. observar los eventos reales emitidos
+4. detectar funciones ya resueltas por la shell o el sistema
+5. identificar teclas sin uso, bindings rotos y colisiones
+6. proponer acciones compatibles con el hardware y proveedores disponibles
+7. pedir aprobación antes de escribir
+```
+
+La serigrafía física orienta al usuario, pero no constituye una fuente técnica confiable. Una tecla rotulada para ayuda puede emitir `Help`; una tecla de captura puede emitir eventos distintos con y sin `Fn`.
 
 ## Estado actual
 
@@ -17,7 +46,7 @@ Existe un módulo funcional bajo una estructura similar a:
 ~/.local/share/cachycaos/modules/keybinds/app.sh
 ```
 
-Durante el desarrollo también existieron rutas anteriores y respaldos de migración, entre ellas:
+Durante el desarrollo también existieron rutas anteriores y respaldos de migración:
 
 ```text
 ~/.local/share/cachycaos/keybinds/app.sh
@@ -25,47 +54,63 @@ Durante el desarrollo también existieron rutas anteriores y respaldos de migrac
 ~/.local/share/cachycaos/modules/keybinds/backups/
 ```
 
-La coexistencia de estas rutas refleja la reorganización hacia una plataforma modular y debe resolverse en el instalador final.
+La coexistencia debe resolverse en el instalador final.
+
+La configuración activa de Hyprland observada usa Lua:
+
+```text
+~/.config/hypr/hyprland.lua
+```
+
+Toda instrucción manual debe indicar explícitamente:
+
+```text
+objetivo → archivo → ubicación exacta → bloque → recarga → prueba
+```
 
 ## Objetivos funcionales
 
 - listar atajos relevantes;
-- añadir nuevos atajos;
-- modificar atajos administrados;
-- detectar colisiones;
-- comprobar que la acción asociada existe;
-- detectar teclas multimedia importantes sin binding;
+- detectar hardware de entrada y teclas especiales;
+- identificar eventos XKB y keycodes cuando sea necesario;
+- añadir y modificar atajos administrados;
+- detectar colisiones, duplicados y comandos inexistentes;
 - distinguir acciones de Hyprland, de una shell y de herramientas externas;
 - conservar comentarios y configuración no administrada;
 - crear respaldo antes de escribir;
-- recargar Hyprland únicamente tras una validación correcta;
-- restaurar la versión previa si la recarga falla.
+- validar sintaxis antes de recargar;
+- restaurar la versión previa si la recarga falla;
+- exportar e importar perfiles;
+- ofrecer un asistente guiado para teclas multimedia.
 
 ## Principio de propiedad
 
 Nest no debe apropiarse de todo `hyprland.conf` ni del archivo Lua principal.
 
-La estrategia recomendada es mantener un archivo administrado y explícitamente incluido por la configuración principal, por ejemplo:
+La estrategia recomendada es mantener un archivo administrado y explícitamente incluido por la configuración principal. La ruta definitiva debe decidirse tras auditar la integración correcta con la configuración Lua actual.
+
+Ejemplo conceptual:
 
 ```text
 ~/.config/hypr/conf.d/nest-keybinds.conf
 ```
 
-Así se separan:
+Deben mantenerse separadas:
 
 - configuración personal;
 - configuración de la shell;
+- configuración de Hyprland;
 - atajos administrados por Nest.
 
-La ruta definitiva debe decidirse después de auditar la estructura limpia de Hyprland usada por Cachy-caOS y la forma correcta de integrar archivos declarativos con la configuración Lua actual.
+## Modelo de datos
 
-## Modelo de acción
-
-Un keybind no debe almacenarse solamente como texto. Debe representarse como datos verificables:
+Un keybind debe representarse como datos verificables:
 
 ```text
 id
-tecla física esperada
+tecla física o posición esperada
+dispositivo de entrada
+evento kernel/evdev observado
 evento XKB observado
 keycode XKB, cuando sea necesario
 modificadores
@@ -77,94 +122,197 @@ dependencias
 origen: usuario | Nest | shell | sistema
 perfil
 estado de validación
+fecha y método de detección
 ```
 
 Ejemplo conceptual:
 
 ```text
-id: launcher
-tecla: SUPER_L
-evento: release
-acción lógica: launcher.toggle
-proveedor preferido: noctalia
-comando resuelto: noctalia msg panel-toggle launcher
+id: thinkbook-f9-character-picker
+tecla física: F9 / ayuda Lenovo
+evento XKB: Help
+keycode XKB: 146
+acción lógica: character-picker.toggle
+proveedor: noctalia
+comando: noctalia msg panel-toggle launcher /emo
 origen: Nest
-perfil: Noctalia Standard
+perfil: Lenovo ThinkBook detectado + Noctalia
+estado: validado
 ```
 
-La acción lógica permite cambiar de proveedor sin rediseñar todo el perfil.
+La acción lógica permite sustituir el proveedor sin rediseñar el perfil.
+
+## Catálogo de capacidades
+
+Los perfiles no deben almacenar solamente comandos. Deben resolver intenciones:
+
+```text
+launcher.toggle
+character-picker.toggle
+calculator.open
+screenshot.region
+screenshot.fullscreen
+notification-center.toggle
+audio.mute
+audio.volume-up
+audio.volume-down
+microphone.mute
+brightness.up
+brightness.down
+radio.airplane-toggle
+display.switch
+call.accept
+call.reject
+special-key.activate
+```
+
+Una misma capacidad puede tener distintos proveedores:
+
+```text
+character-picker.toggle
+├── Noctalia: noctalia msg panel-toggle launcher /emo
+├── Walker: proveedor alternativo
+└── otro backend configurado por el usuario
+```
+
+Nest debe preferir capacidades nativas ya presentes antes de proponer dependencias externas.
 
 ## Integración con shells
-
-El módulo Keybinds registra las teclas en Hyprland. Los adaptadores de shell resuelven qué comando público ejecuta cada acción.
 
 ```text
 Keybinds
 → acción lógica
-→ adaptador de shell
+→ adaptador de shell o proveedor externo
 → comando público
 ```
 
-Para Noctalia, la fuente canónica es:
+La fuente canónica de Noctalia es:
 
 ```text
 docs/integraciones/noctalia-v5.md
 ```
 
-Ejemplo validado:
+Ejemplos validados:
 
 ```text
 Super al soltar
 → launcher.toggle
 → Noctalia Integration
 → noctalia msg panel-toggle launcher
+
+F9 física del ThinkBook
+→ Help
+→ character-picker.toggle
+→ Noctalia Integration
+→ noctalia msg panel-toggle launcher /emo
 ```
 
-Esta separación permite sustituir Noctalia por otra shell conservando la intención del atajo y cambiando solamente el proveedor.
+## Clasificación de teclas
+
+Nest debería clasificar el inventario al menos en:
+
+```text
+Keyboard
+├── Standard Keys
+├── Multimedia Keys
+│   ├── audio
+│   ├── micrófono
+│   ├── reproducción
+│   ├── brillo
+│   └── radio/modo avión
+├── System Keys
+│   ├── captura
+│   ├── calculadora
+│   ├── cambio de pantalla
+│   └── llamadas
+└── Special Key
+```
+
+### Special Key
+
+`Special Key` es el nombre conceptual para una tecla especial del fabricante que Nest puede reutilizar.
+
+Puede aparecer físicamente como:
+
+- estrella o símbolo propietario;
+- tecla Copilot;
+- botón Lenovo, ASUS, HP, Dell o ROG;
+- asistente;
+- tecla sin función útil en Linux.
+
+Nest no debe asumir su evento ni su función. Debe detectarla y ofrecer acciones sugeridas.
+
+Ejemplo de experiencia futura:
+
+```text
+⭐ Special Key detectada
+
+¿Quieres darle un superpoder?
+
+- Centro de notificaciones
+- Quick Actions
+- Launcher
+- Portapapeles
+- Aplicación personalizada
+- Más tarde
+```
+
+En el ThinkBook actual, la tecla física muestra una `S` dentro de una estrella. Su evento y binding se validarán en el siguiente paso de la auditoría.
 
 ## Auditoría y Nest Doctor
 
-El diagnóstico debe distinguir al menos estos estados:
+Estados mínimos:
 
 ```text
 ✓ binding y acción disponibles
-⚠ acción disponible, pero no existe binding
+⚠ acción disponible, pero sin binding
 ✗ binding presente, pero comando inexistente
-✗ binding y comando presentes, pero falta una dependencia
+✗ proveedor presente, pero falta una dependencia
 ⚠ colisión con otro binding
 ⚠ binding duplicado en archivos distintos
-⚠ tecla física emite un evento distinto al esperado
+⚠ tecla física emite un evento diferente al esperado
+⚠ utilidad externa duplica una capacidad nativa
+⚠ comando/contexto no existe en la versión instalada
 ```
 
-Casos reales observados en la instalación limpia:
+Casos reales:
 
 ```text
 Brillo
 - bindings XF86 presentes
 - brightnessctl ausente
-- reparación: instalar dependencia
+- reparación: instalar dependencia requerida
 
 Launcher
-- SUPER+R apuntaba a hyprlauncher
-- hyprlauncher ausente
-- reparación: usar IPC de Noctalia
-- mejora: añadir Super al soltar
+- binding hacia hyprlauncher
+- ejecutable ausente
+- reparación: usar IPC nativa de Noctalia
 
 Captura
-- sin bindings funcionales al inicio
-- Noctalia expone y ejecuta acciones de captura
+- Noctalia ya exponía ambas acciones
 - ImpPt sola emite XF86SelectiveScreenshot, key 642
 - Fn + ImpPt emite Print, key 107
-- reparación: enlazar ambos keycodes XKB a la IPC de Noctalia
+- reparación: bindings contra keycodes observados con wev
+
+Character Picker
+- F9 física emite Help, key 146
+- Noctalia ya ofrece launcher /emo
+- reparación: binding Help a la capacidad nativa
+- resultado: cero dependencias adicionales
+
+Calculadora
+- F12 física emite XF86Calculator, key 148
+- no existía calculadora instalada
+- solución: Galculator como proveedor ligero
 ```
 
-El diagnóstico no debe inventar el historial del sistema. Debe informar únicamente el estado comprobable: nunca instalado, actualmente ausente, reemplazado o disponible mediante otro proveedor solo cuando exista evidencia suficiente.
+El diagnóstico no debe inventar el historial del sistema. Debe describir únicamente estados comprobables.
 
 ## Diagnóstico de teclas físicas y Fn
 
-`Fn` no debe modelarse como un modificador universal. En muchos portátiles, la combinación es procesada por el firmware y genera otro evento de teclado. Ese evento puede provenir incluso de un dispositivo distinto.
+`Fn` no debe modelarse como un modificador universal. En muchos portátiles la combinación es procesada por firmware y genera otro evento, incluso desde un dispositivo distinto.
 
-Caso validado en un Lenovo ThinkBook:
+Caso validado en Lenovo ThinkBook:
 
 ```text
 ImpPt sola
@@ -178,48 +326,91 @@ Fn + ImpPt
 └── wev/XKB: Print, key 107
 ```
 
-El identificador `ideapad-extra-buttons` es el nombre del controlador de Linux utilizado por Lenovo y no identifica necesariamente la gama comercial del portátil.
+El identificador `ideapad-extra-buttons` corresponde al controlador de Linux utilizado por Lenovo y no identifica necesariamente la gama comercial.
 
 ### Fuente correcta para `code:`
 
-Los códigos mostrados por `libinput debug-events` pertenecen al nivel kernel/evdev. Los códigos mostrados por `wev` corresponden al nivel Wayland/XKB que necesita Hyprland para bindings `code:<n>`.
+Los códigos de `libinput debug-events` pertenecen al nivel kernel/evdev. Los códigos de `wev` corresponden al nivel Wayland/XKB que necesita Hyprland.
 
 Regla obligatoria:
 
 > Para escribir `code:<n>` en Hyprland, usar el keycode mostrado por `wev`. No copiar directamente el número mostrado por `libinput`.
 
-En la prueba real, estos bindings no funcionaron:
+Bindings incorrectos probados:
 
 ```lua
 hl.bind("code:634", ...)
 hl.bind("code:99", ...)
 ```
 
-Los bindings correctos fueron:
+Bindings correctos:
 
 ```lua
 hl.bind("code:642", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
 hl.bind("code:107", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen all"))
 ```
 
-Los números son específicos del equipo y del evento observado; no deben asumirse en otros teclados.
+Los números son específicos del equipo y del evento observado.
 
-### Flujo de diagnóstico recomendado
+## Perfil Lenovo ThinkBook observado
+
+Estado actual de las teclas multimedia:
+
+```text
+Audio y volumen             → funcional
+Mute de micrófono           → funcional
+Brillo                      → funcional
+Modo avión                  → funcional
+Captura regional            → funcional
+Captura completa            → funcional
+F9 / ayuda                  → Character Picker de Noctalia
+F12 / calculadora           → Galculator
+Cambio de pantalla          → pendiente de probar con monitor externo
+F10/F11 / llamadas          → pendiente de detectar y definir utilidad
+⭐ Special Key              → pendiente de detectar; candidata a notificaciones
+```
+
+### Bindings validados
+
+```lua
+-- Screenshot Keys
+hl.bind("code:642", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind("code:107", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen all"))
+
+-- Calculator Key
+hl.bind("XF86Calculator", hl.dsp.exec_cmd("galculator"))
+
+-- Character Picker
+hl.bind("Help", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher /emo"))
+```
+
+El archivo activo usado durante la prueba fue:
+
+```text
+~/.config/hypr/hyprland.lua
+```
+
+Estos fragmentos documentan el resultado real, pero Nest deberá escribir en un archivo administrado propio cuando el módulo madure.
+
+## Flujo de diagnóstico recomendado
 
 Aplicar un paso, comprobarlo y avanzar solo con evidencia:
 
 ```text
 1. identificar el binding actual
-2. desactivarlo temporalmente si interfiere con la medición
+2. desactivarlo temporalmente si interfiere
 3. usar wev para obtener símbolo y keycode XKB
 4. usar libinput solo si hace falta identificar dispositivo/evento kernel
-5. añadir un único binding
-6. recargar Hyprland
-7. probar la acción
-8. conservar o revertir según el resultado
+5. comprobar si la shell ya ofrece la capacidad
+6. seleccionar proveedor y dependencias
+7. añadir un único binding
+8. recargar Hyprland
+9. probar la acción
+10. conservar o revertir
+11. documentar solo después de validar
 ```
 
-Para reducir ruido en Fish:
+Comando de medición usado en Fish:
 
 ```fish
 wev | grep --line-buffered -E 'key:|sym:'
@@ -227,29 +418,42 @@ wev | grep --line-buffered -E 'key:|sym:'
 
 La ventana de `wev` recibe las pulsaciones. Para cerrar con `Ctrl+C`, puede ser necesario devolver primero el foco a la terminal.
 
+Regla de trabajo:
+
+```text
+una hipótesis
+→ un comando o cambio
+→ una prueba
+→ un resultado
+```
+
+No se deben adelantar pasos posteriores antes de verificar el actual.
+
 ## Perfiles
 
-Nest podrá ofrecer perfiles declarativos, revisables y reversibles.
-
-Primer perfil propuesto:
+Primer perfil de shell propuesto:
 
 ```text
 Noctalia Standard
 ```
 
-Funciones iniciales:
+Primer perfil de hardware observado:
 
 ```text
-Super                   → launcher
-captura regional        → acción lógica screenshot.region
-captura completa        → acción lógica screenshot.fullscreen
-XF86Audio*              → audio y multimedia
-XF86MonBrightness*      → brillo
+Lenovo ThinkBook — perfil detectado, no universal
 ```
 
-El perfil no debe asumir `Shift + Print` como combinación universal. Debe resolver las acciones contra los eventos reales emitidos por el teclado o permitir que el usuario los asigne explícitamente.
+Los perfiles pueden combinarse:
 
-Los perfiles deben:
+```text
+hardware detectado
++ shell detectada
++ proveedores disponibles
++ preferencias del usuario
+= propuesta de perfil
+```
+
+Un perfil debe:
 
 - mostrar el diff antes de aplicar;
 - conservar atajos personalizados;
@@ -257,54 +461,59 @@ Los perfiles deben:
 - permitir activar acciones individualmente;
 - registrar qué adaptador resolvió cada comando;
 - registrar cómo fue detectada la tecla;
-- poder exportarse e importarse;
-- poder revertirse.
+- indicar dependencias nuevas y capacidades nativas reutilizadas;
+- poder exportarse, importarse y revertirse.
 
-## Flujo seguro propuesto
+## Flujo seguro de escritura
 
 ```text
-leer → interpretar → resolver acciones → detectar conflictos
-→ mostrar cambios → respaldar → escribir temporal
-→ validar → reemplazar → recargar → comprobar
+leer
+→ interpretar
+→ resolver acciones
+→ detectar conflictos
+→ mostrar cambios
+→ respaldar
+→ escribir temporal
+→ validar
+→ reemplazar
+→ recargar
+→ comprobar
 ```
 
 Nunca debe escribirse directamente sobre el archivo activo sin una etapa temporal y una copia recuperable.
 
-Durante diagnóstico interactivo debe respetarse además:
-
-```text
-una hipótesis → un comando o cambio → una prueba → un resultado
-```
-
-No se deben encadenar pasos posteriores antes de verificar que el paso actual funciona.
-
 ## Consideraciones
 
 - Hyprland permite múltiples archivos `source`; deben respetarse.
-- Un mismo atajo puede estar declarado en distintos archivos.
-- La shell puede exponer acciones, pero el binding pertenece al compositor.
-- Las teclas físicas, layouts, firmware y controladores cambian entre equipos.
+- Un mismo atajo puede aparecer en distintos archivos.
+- La shell expone acciones, pero el binding pertenece al compositor.
+- Teclados, layouts, firmware y controladores cambian entre equipos.
 - `Fn` puede cambiar el evento en firmware y no llegar como modificador.
-- El sistema principal usa teclado LATAM y Fish, pero los bindings pertenecen a Hyprland, no al shell interactivo.
-- Los ejemplos operativos del proyecto deben ser compatibles con Fish o indicar explícitamente cuando requieren Bash.
-- Toda instrucción de edición debe indicar objetivo, archivo y ubicación exacta antes del cambio.
-- Las acciones deben almacenarse como datos cuando sea posible y no como fragmentos de texto difíciles de validar.
-- Un comando disponible no garantiza que su backend o permisos estén operativos.
+- El sistema principal usa teclado LATAM y Fish.
+- Los ejemplos operativos deben ser compatibles con Fish o indicarlo explícitamente.
+- Toda instrucción de edición debe indicar archivo y ubicación exacta.
+- Un comando existente no garantiza que su backend o permisos estén operativos.
+- Una capacidad nativa debe preferirse sobre una utilidad redundante.
+- La detección debe preceder a la propuesta de perfil.
 
 ## Pendientes
 
 - definir el esquema interno definitivo de un keybind;
-- normalizar modificadores, teclas y eventos release/repeat;
+- decidir el archivo administrado compatible con la configuración Lua;
+- normalizar modificadores y eventos press/release/repeat;
 - resolver colisiones y prioridades;
 - distinguir atajos del usuario, de Nest y de la shell;
 - implementar resolución por adaptadores;
-- auditar las teclas multimedia restantes de la instalación limpia;
-- convertir el flujo de detección con `wev` en un asistente guiado;
+- detectar y configurar la ⭐ Special Key;
+- auditar F10/F11 de llamadas;
+- validar cambio de pantalla con monitor externo;
+- convertir `wev` en un asistente guiado;
+- inventariar dispositivos y teclas automáticamente;
 - exportar e importar perfiles;
 - crear interfaz de búsqueda;
-- integrar el diagnóstico antes de recargar Hyprland;
-- documentar la v0.2 y los cambios posteriores desde los respaldos existentes.
+- integrar validación antes de recargar Hyprland;
+- documentar la v0.2 desde los respaldos existentes.
 
 ## Criterio de finalización
 
-El módulo estará listo cuando pueda realizar cambios reversibles sobre un archivo administrado, detectar conflictos globales, verificar las acciones asociadas, identificar correctamente eventos de teclas especiales y demostrar que una actualización o sustitución de Noctalia o Hyprland no destruye los atajos personales ni obliga a reescribir los perfiles desde cero.
+El módulo estará listo cuando pueda descubrir el hardware, identificar correctamente los eventos de teclas especiales, resolver acciones contra proveedores disponibles, evitar dependencias redundantes, mostrar y aplicar cambios reversibles, detectar conflictos globales y demostrar que una actualización o sustitución de Noctalia o Hyprland no destruye los atajos personales ni obliga a reescribir los perfiles desde cero.
