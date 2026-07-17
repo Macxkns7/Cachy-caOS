@@ -7,15 +7,7 @@
 
 Noctalia v5 es la shell visual actual sobre Hyprland. Proporciona barra, launcher, dock, paneles, notificaciones, widgets, lockscreen, temas y servicios de interacción diaria.
 
-Noctalia no forma parte del Core de Nest. Debe considerarse una implementación reemplazable conectada mediante un adaptador de integración.
-
-El nombre conceptual de esta capa es:
-
-```text
-Noctalia Integration
-```
-
-Este patrón debe poder replicarse para otras shells sin modificar el Core:
+Noctalia no forma parte del Core de Nest. Debe considerarse una implementación reemplazable conectada mediante un adaptador:
 
 ```text
 Nest Core
@@ -25,6 +17,24 @@ Nest Core
 └── fallback Hyprland / herramientas estándar
 ```
 
+Nest debe conservar las intenciones y capacidades aunque cambie la shell. El adaptador solo traduce esas intenciones a comandos públicos del proveedor activo.
+
+## Principio de integración nativa
+
+Antes de instalar una utilidad externa, Nest debe comprobar en este orden:
+
+```text
+1. ¿La shell o el sistema ya ofrecen la capacidad?
+2. ¿Existe una interfaz pública y estable para invocarla?
+3. ¿La implementación nativa satisface la necesidad?
+4. ¿Existe ya una herramienta configurada por el usuario?
+5. Solo entonces proponer una dependencia adicional.
+```
+
+Este principio evita duplicar launchers, gestores de portapapeles, selectores de caracteres, backends de captura y otros componentes pequeños que la shell ya resuelve.
+
+La instalación de una dependencia no debe basarse en que sea habitual en otras configuraciones Wayland. Debe basarse en una carencia comprobada.
+
 ## Ubicaciones observadas
 
 Configuración persistente principal:
@@ -33,24 +43,24 @@ Configuración persistente principal:
 ~/.local/state/noctalia/settings.toml
 ```
 
-Otros datos aparecen bajo:
+Datos y registros:
 
 ```text
 ~/.local/state/noctalia/
 ~/.cache/noctalia/noctalia.log
 ```
 
-La configuración personal actualmente incluye barra, dock, idle, plugins, shell, tema, wallpaper y widgets.
+La configuración personal observada incluye barra, dock, idle, plugins, shell, tema, wallpaper y widgets.
 
 ## IPC pública
 
-Noctalia ofrece una interfaz de comandos mediante:
+Noctalia expone acciones mediante:
 
 ```text
-noctalia msg <comando>
+noctalia msg <comando> [argumentos]
 ```
 
-La instalación actual expone, entre otras, estas familias de acciones:
+La instalación actual ofrece familias de acciones para:
 
 - paneles, launcher y ajustes;
 - barra y dock;
@@ -58,53 +68,121 @@ La instalación actual expone, entre otras, estas familias de acciones:
 - brillo;
 - Wi-Fi y Bluetooth;
 - capturas de pantalla;
-- wallpaper, temas y plantillas;
+- wallpapers, temas y plantillas;
 - notificaciones;
 - bloqueo, energía y sesión;
 - plugins y widgets;
 - perfiles de EasyEffects.
 
-Comandos comprobados directamente:
+Nest debe consultar la ayuda de la versión instalada y validar los comandos en tiempo de ejecución:
+
+```fish
+noctalia msg --help
+```
+
+La documentación del adaptador no debe asumir que todas las versiones exponen las mismas acciones.
+
+## Capacidades comprobadas
+
+### Launcher de aplicaciones
 
 ```text
 noctalia msg panel-toggle launcher
+```
+
+Funciona correctamente y reemplazó un binding anterior hacia `hyprlauncher`, cuyo ejecutable no estaba instalado.
+
+### Selector nativo de caracteres
+
+```text
+noctalia msg panel-toggle launcher /emo
+```
+
+Abre el launcher directamente en el selector de emojis y caracteres. La integración fue validada visual y funcionalmente.
+
+Esto permite resolver la capacidad lógica:
+
+```text
+character-picker.toggle
+```
+
+sin instalar Walker, Rofi u otro selector adicional.
+
+No debe modelarse como una función inseparable de Noctalia. Debe registrarse como una capacidad con proveedor intercambiable:
+
+```text
+capacidad: character-picker.toggle
+proveedor: noctalia
+comando: noctalia msg panel-toggle launcher /emo
+fallback posible: selector configurado por el usuario
+```
+
+### Selector nativo de wallpapers
+
+El contexto `/wall` también fue comprobado manualmente desde el launcher:
+
+```text
+noctalia msg panel-toggle launcher /wall
+```
+
+Otros contextos hipotéticos como `/calc` o `/clipboard` no funcionaron en la versión probada y no deben documentarse como capacidades disponibles.
+
+### Captura regional
+
+```text
 noctalia msg screenshot-region
+```
+
+Abre correctamente el selector interactivo de región.
+
+### Captura completa
+
+```text
 noctalia msg screenshot-fullscreen all
 ```
 
-El launcher fue validado correctamente con:
+Captura correctamente todos los monitores.
+
+La instalación limpia comprobada no contiene:
 
 ```text
-noctalia msg panel-toggle launcher
+grim
+slurp
+satty
+swappy
+grimblast
 ```
 
-Las capturas fueron validadas correctamente con:
+Noctalia ejecuta ambas capturas sin esas herramientas, por lo que Nest no debe instalarlas por suposición.
+
+### Centro de notificaciones
+
+La IPC expone acciones de gestión de notificaciones y paneles genéricos. La apertura del panel de notificaciones mediante una tecla dedicada queda como siguiente validación.
+
+La acción lógica prevista es:
 
 ```text
-noctalia msg screenshot-region
-noctalia msg screenshot-fullscreen all
+notification-center.toggle
 ```
 
-La captura regional abre el selector de área y la captura completa funciona sin que estén instalados `grim`, `slurp`, `satty`, `swappy` ni `grimblast`. En esta instalación, por tanto, Nest no debe instalar esas herramientas por suposición.
-
-Nest debe preferir esta IPC pública cuando exista y evitar modificar archivos internos de Noctalia sin necesidad.
+El comando definitivo debe obtenerse y probarse antes de documentarlo como funcional.
 
 ## Modelo de integración
-
-La responsabilidad debe separarse por capas:
 
 ```text
 Nest
 ├── Nest Core
+│   ├── catálogo de capacidades
 │   ├── estado declarativo
 │   ├── diagnóstico
 │   ├── backups y rollback
 │   └── perfiles de integración
 ├── Adaptador Noctalia
-│   ├── detección de versión y disponibilidad
-│   ├── validación de IPC
-│   ├── traducción de acciones de Nest a `noctalia msg`
-│   ├── comprobación de dependencias externas
+│   ├── detección de versión
+│   ├── descubrimiento de IPC
+│   ├── validación de capacidades
+│   ├── traducción de acciones lógicas
+│   ├── comprobación de dependencias
 │   └── degradación controlada
 └── Adaptador Hyprland
     ├── keybinds
@@ -113,101 +191,159 @@ Nest
     └── reglas del compositor
 ```
 
-Nest no debe tratar a Noctalia como una dependencia absoluta. Debe detectar sus capacidades en tiempo de ejecución y habilitar únicamente las integraciones disponibles.
+Nest no debe tratar a Noctalia como dependencia absoluta. Debe habilitar únicamente las integraciones que realmente estén disponibles.
 
 ## Atajos y responsabilidades
 
-Los bindings pertenecen al compositor. Noctalia expone acciones; Hyprland decide qué tecla las ejecuta.
-
-Modelo correcto:
+Los bindings pertenecen al compositor. Noctalia expone acciones y Hyprland decide qué evento las ejecuta.
 
 ```text
 tecla física
 → evento XKB/Wayland
 → binding de Hyprland
-→ acción pública de Noctalia
+→ acción lógica de Nest
+→ proveedor activo
+→ comando público de Noctalia
 ```
 
-Ejemplo validado:
+Ejemplos validados:
 
 ```text
-Super
-→ Hyprland binding con release
+Super al soltar
+→ launcher.toggle
 → noctalia msg panel-toggle launcher
+
+tecla física F9 del ThinkBook
+→ evento XKB Help
+→ character-picker.toggle
+→ noctalia msg panel-toggle launcher /emo
 ```
 
-Esto evita depender de launchers externos cuando Noctalia ya ofrece esa capacidad.
-
-La instalación limpia observada incluía un binding hacia `hyprlauncher`, aunque el ejecutable no estaba instalado. La corrección fue reemplazarlo por la IPC oficial de Noctalia y añadir la apertura mediante la tecla Super al soltarla.
+Esta separación permite sustituir Noctalia por otra shell conservando la intención del atajo.
 
 ## Perfil Noctalia Standard
 
-Nest debería poder ofrecer un perfil declarativo y reversible para funciones comunes:
+Primer conjunto de capacidades propuestas:
 
 ```text
-Super                 → launcher
-captura regional      → screenshot-region
-captura completa      → screenshot-fullscreen all
-XF86Audio*            → volumen, mute y multimedia
-XF86MonBrightness*    → brillo
+launcher.toggle              → Noctalia launcher
+character-picker.toggle      → Noctalia launcher /emo
+screenshot.region            → screenshot-region
+screenshot.fullscreen        → screenshot-fullscreen all
+audio.*                      → IPC multimedia
+brightness.*                 → IPC o backend validado
+notification-center.toggle   → pendiente de validar
 ```
 
-El perfil debe definir acciones lógicas, no asumir que todos los teclados emiten las mismas teclas. En el Lenovo ThinkBook comprobado, la tecla física `ImpPt` tiene dos capas de firmware:
+El perfil debe definir acciones lógicas, no keycodes universales.
+
+## Teclas comprobadas en Lenovo ThinkBook
+
+### Capturas
 
 ```text
 ImpPt sola      → XF86SelectiveScreenshot → keycode XKB 642
 Fn + ImpPt      → Print                   → keycode XKB 107
 ```
 
-Los bindings funcionales en la configuración Lua de Hyprland quedaron como:
+Bindings funcionales:
 
 ```lua
 hl.bind("code:642", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
 hl.bind("code:107", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen all"))
 ```
 
-Estos códigos son específicos del evento observado y no deben convertirse en valores universales del perfil. Nest debe detectar o pedir confirmación del evento real del equipo antes de aplicarlos.
+### F9 física: selector de caracteres
 
-Este perfil no debe escribirse de forma opaca ni apropiarse de toda la configuración de Hyprland. Debe administrarse desde el módulo Keybinds y mostrar previamente los cambios y colisiones.
+La tecla rotulada por Lenovo para ayuda genera:
 
-El perfil representa una propuesta de integración de Nest, no una obligación impuesta por Noctalia.
+```text
+wev/XKB: Help
+keycode XKB: 146
+```
+
+Binding funcional:
+
+```lua
+-- Character Picker
+hl.bind("Help", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher /emo"))
+```
+
+La leyenda física de una tecla no determina su evento ni su intención futura. Nest debe descubrir el evento real y luego proponer una asignación.
+
+### F12 física: calculadora
+
+La tecla genera:
+
+```text
+wev/XKB: XF86Calculator
+keycode XKB: 148
+```
+
+Se instaló `galculator` como proveedor externo ligero porque Noctalia no expone una calculadora autónoma comprobada.
+
+Binding funcional:
+
+```lua
+-- Calculator Key
+hl.bind("XF86Calculator", hl.dsp.exec_cmd("galculator"))
+```
+
+La capacidad lógica debe registrarse como:
+
+```text
+calculator.open
+```
+
+Noctalia no es el proveedor en este caso; Hyprland ejecuta una aplicación externa elegida por el usuario.
 
 ## Auditoría de capacidades
 
-El adaptador debe distinguir al menos cuatro estados:
+El adaptador debe distinguir al menos:
 
 ```text
-1. Acción disponible y binding correcto
-2. Acción disponible, pero sin binding
-3. Binding presente, pero comando inexistente
-4. Acción declarada, pero falta una dependencia externa
+1. capacidad disponible y binding correcto
+2. capacidad disponible, pero sin binding
+3. binding presente, pero proveedor inexistente
+4. proveedor presente, pero falta una dependencia
+5. capacidad nativa disponible, pero duplicada por una utilidad externa
+6. contexto o comando documentado, pero no soportado por la versión instalada
 ```
 
-Ejemplos observados en la instalación limpia:
+Casos reales:
 
 ```text
 Brillo:
 - bindings presentes
-- `brightnessctl` ausente
-- corregido instalando la dependencia
+- brightnessctl ausente
+- reparación: instalar dependencia requerida
 
 Launcher:
-- binding presente hacia `hyprlauncher`
+- binding hacia hyprlauncher
 - ejecutable ausente
-- corregido usando `noctalia msg panel-toggle launcher`
+- reparación: IPC nativa de Noctalia
 
 Capturas:
-- sin bindings funcionales al inicio
-- sin grim, slurp, satty, swappy ni grimblast
-- Noctalia expone y ejecuta sus acciones de captura
-- bindings corregidos usando los keycodes XKB observados con `wev`
+- sin bindings funcionales
+- Noctalia ya ofrecía las acciones
+- reparación: bindings contra eventos observados con wev
+
+Character Picker:
+- capacidad nativa encontrada en launcher /emo
+- no se instaló Walker
+- reparación: binding Help hacia IPC nativa
+
+Calculadora:
+- tecla XF86Calculator detectada
+- no existía proveedor instalado
+- solución: Galculator + binding explícito
 ```
 
-Nest Doctor no debe limitarse a comprobar si un comando existe. Debe comprender la relación entre tecla física, evento emitido, binding, proveedor de la acción y dependencia real.
+Nest Doctor debe comprender la relación entre tecla física, evento, binding, acción lógica, proveedor y dependencia real.
 
 ## Diagnóstico de teclas especiales
 
-Las teclas `Fn` no deben modelarse como un modificador universal. En muchos portátiles, el firmware transforma la combinación y emite un evento diferente, a veces incluso desde otro dispositivo de entrada.
+`Fn` no debe modelarse como un modificador universal. En muchos portátiles el firmware transforma la combinación y emite otro evento, incluso desde otro dispositivo.
 
 En el ThinkBook comprobado:
 
@@ -223,35 +359,34 @@ Fn + ImpPt
 → Wayland/XKB mediante wev: Print, key 107
 ```
 
-El nombre `ideapad-extra-buttons` corresponde al controlador del kernel utilizado por Lenovo y no implica que el equipo sea necesariamente un IdeaPad.
-
 Regla operativa:
 
-> Para bindings `code:<n>` de Hyprland, la fuente de verdad debe ser el keycode mostrado por `wev`, no el código evdev mostrado por `libinput debug-events`.
+> Para bindings `code:<n>` de Hyprland, la fuente de verdad es el keycode mostrado por `wev`, no el código evdev mostrado por `libinput debug-events`.
 
-`libinput` sigue siendo útil para identificar el dispositivo físico y el evento del kernel, pero sus números no deben copiarse directamente a `code:` en Hyprland.
+`libinput` sigue siendo útil para identificar el dispositivo y el evento del kernel.
 
 ## Fallback y degradación elegante
 
-Cada acción integrada debe definir una cadena de resolución, por ejemplo:
+Cada capacidad debe definir una cadena de resolución. Ejemplo:
 
 ```text
-launcher:
-1. Noctalia IPC
-2. launcher configurado por el usuario
+character-picker.toggle:
+1. Noctalia launcher /emo
+2. proveedor configurado por el usuario
 3. alternativa estándar disponible
-4. diagnóstico sin aplicar cambios destructivos
+4. sugerencia de instalación
+5. estado no disponible claramente informado
 ```
 
 ```text
-captura:
-1. Noctalia IPC, si está operativa
+screenshot.region:
+1. Noctalia IPC
 2. backend Wayland configurado
 3. sugerencia de instalación
-4. estado no disponible claramente informado
+4. diagnóstico sin cambios destructivos
 ```
 
-Si Noctalia cambia o se reemplaza, los módulos del Core deben seguir funcionando. Solo el adaptador visual debe requerir ajustes.
+Si Noctalia cambia o se reemplaza, solo debe modificarse el adaptador.
 
 ## Agente Polkit
 
@@ -273,15 +408,9 @@ Nest Doctor debe comprobar:
 
 ## Plugins y widgets
 
-La configuración actual utiliza fuentes oficiales y comunitarias de plugins. Entre los plugins observados están Wallhaven y mpvpaper.
+La configuración observada utiliza fuentes oficiales y comunitarias. Entre los plugins probados están Wallhaven y mpvpaper.
 
-Nest no debe copiar el sistema de plugins de Noctalia. Puede:
-
-- mostrar estado;
-- instalar o actualizar mediante comandos oficiales;
-- respaldar configuración;
-- diagnosticar errores;
-- ofrecer accesos directos a ajustes.
+Nest no debe copiar el sistema de plugins. Puede mostrar estado, instalar o actualizar mediante comandos oficiales, respaldar configuración, diagnosticar errores y ofrecer accesos directos.
 
 ## Separación de responsabilidades
 
@@ -300,57 +429,25 @@ Nest no debe copiar el sistema de plugins de Noctalia. Puede:
 - registro de keybinds;
 - ventanas y workspaces;
 - reglas del compositor;
-- ejecución de las acciones asociadas a teclas.
+- ejecución de acciones asociadas a eventos.
 
 ### Nest
 
-- configuración declarativa del sistema;
+- catálogo de capacidades;
+- configuración declarativa;
 - mantenimiento y diagnóstico;
 - backups y rollback;
 - instalación y migración;
-- administración de módulos propios;
 - perfiles de atajos;
-- adaptadores hacia Noctalia y otras shells;
-- selección del proveedor adecuado para cada acción.
-
-## Capturas: validación completada
-
-La instalación limpia comprobada no contiene:
-
-```text
-grim
-slurp
-satty
-swappy
-grimblast
-```
-
-Noctalia sí ejecuta correctamente:
-
-```text
-noctalia msg screenshot-region
-noctalia msg screenshot-fullscreen all
-```
-
-Conclusiones:
-
-- la captura regional y la captura completa están operativas;
-- no fue necesario instalar un backend externo adicional;
-- Nest debe probar primero la IPC disponible;
-- una dependencia no debe instalarse solo porque sea habitual en otras configuraciones Wayland;
-- siguen pendientes de documentar la ruta de guardado, portales, permisos de screencopy y comportamiento ante fallos internos.
+- adaptadores de shell;
+- selección del proveedor adecuado;
+- prevención de dependencias redundantes.
 
 ## Investigación abierta: iconos del dock
 
-El launcher encuentra correctamente archivos `.desktop` e iconos, pero algunas aplicaciones abiertas aparecen sin icono en el dock.
+El launcher encuentra archivos `.desktop` e iconos, pero algunas aplicaciones abiertas aparecen sin icono en el dock.
 
 Casos observados:
-
-- Nest UI con clase `nest-ui`;
-- WebApps Vivaldi con clases por dominio;
-- ChatGPT y YouTube muestran icono en launcher pero no siempre en dock.
-
-Datos relevantes:
 
 ```text
 Nest UI class: nest-ui
@@ -358,23 +455,27 @@ ChatGPT class: vivaldi-chatgpt.com__-Default
 YouTube class: vivaldi-www.youtube.com__-Default
 ```
 
-Los `.desktop` de las WebApps usan iconos absolutos. Nest UI usa `Icon=nest-ui` instalado en el tema hicolor.
-
 Líneas de investigación:
 
-- cómo Noctalia relaciona `app_id`/class con desktop entry;
-- respeto de `StartupWMClass`;
+- relación entre `app_id`/class y desktop entry;
+- `StartupWMClass`;
 - cachés de aplicaciones y dock;
 - diferencias entre aplicaciones nativas y ventanas Vivaldi;
-- posible configuración manual de aliases;
+- aliases manuales;
 - comportamiento de versiones beta de Noctalia v5.
 
 ## Regla para Nest
 
-La integración debe basarse en capacidades, no en suposiciones sobre una versión, fabricante o instalación concreta:
-
 ```text
-detectar → consultar capacidades → validar → proponer → respaldar → aplicar → comprobar → poder revertir
+detectar hardware
+→ descubrir capacidades del proveedor
+→ validar comandos
+→ proponer acciones
+→ mostrar dependencias y colisiones
+→ respaldar
+→ aplicar
+→ comprobar
+→ poder revertir
 ```
 
 Noctalia Integration será el primer adaptador de shell y el modelo de referencia para futuras integraciones.
