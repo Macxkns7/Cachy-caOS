@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Nest UI
+Comment=Centro de administración de Cachy-caOS
+Exec=kitty --class nest-ui --title "Nest UI" -e @NEST_ROOT@/app.sh
+Icon=@NEST_ICON@
+StartupWMClass=nest-ui
+Terminal=false
+StartupNotify=true
+Categories=System;Settings;
+X-CachycaOS-Component=nest-ui
