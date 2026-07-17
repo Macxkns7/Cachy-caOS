@@ -1,7 +1,7 @@
 # Módulo Keybinds
 
 **Estado:** En desarrollo y funcional  
-**Última revisión:** 2026-07-16
+**Última revisión:** 2026-07-17
 
 ## Propósito
 
@@ -65,7 +65,9 @@ Un keybind no debe almacenarse solamente como texto. Debe representarse como dat
 
 ```text
 id
-tecla
+tecla física esperada
+evento XKB observado
+keycode XKB, cuando sea necesario
 modificadores
 evento: press | release | repeat
 acción lógica
@@ -131,6 +133,7 @@ El diagnóstico debe distinguir al menos estos estados:
 ✗ binding y comando presentes, pero falta una dependencia
 ⚠ colisión con otro binding
 ⚠ binding duplicado en archivos distintos
+⚠ tecla física emite un evento distinto al esperado
 ```
 
 Casos reales observados en la instalación limpia:
@@ -148,12 +151,81 @@ Launcher
 - mejora: añadir Super al soltar
 
 Captura
-- Print sin binding
-- Noctalia expone acciones de captura
-- backend y dependencias aún por validar
+- sin bindings funcionales al inicio
+- Noctalia expone y ejecuta acciones de captura
+- ImpPt sola emite XF86SelectiveScreenshot, key 642
+- Fn + ImpPt emite Print, key 107
+- reparación: enlazar ambos keycodes XKB a la IPC de Noctalia
 ```
 
 El diagnóstico no debe inventar el historial del sistema. Debe informar únicamente el estado comprobable: nunca instalado, actualmente ausente, reemplazado o disponible mediante otro proveedor solo cuando exista evidencia suficiente.
+
+## Diagnóstico de teclas físicas y Fn
+
+`Fn` no debe modelarse como un modificador universal. En muchos portátiles, la combinación es procesada por el firmware y genera otro evento de teclado. Ese evento puede provenir incluso de un dispositivo distinto.
+
+Caso validado en un Lenovo ThinkBook:
+
+```text
+ImpPt sola
+├── dispositivo kernel: ideapad-extra-buttons
+├── libinput: KEY_SELECTIVE_SCREENSHOT (634)
+└── wev/XKB: XF86SelectiveScreenshot, key 642
+
+Fn + ImpPt
+├── dispositivo kernel: AT Translated Set 2 keyboard
+├── libinput: KEY_SYSRQ (99), junto a KEY_WAKEUP
+└── wev/XKB: Print, key 107
+```
+
+El identificador `ideapad-extra-buttons` es el nombre del controlador de Linux utilizado por Lenovo y no identifica necesariamente la gama comercial del portátil.
+
+### Fuente correcta para `code:`
+
+Los códigos mostrados por `libinput debug-events` pertenecen al nivel kernel/evdev. Los códigos mostrados por `wev` corresponden al nivel Wayland/XKB que necesita Hyprland para bindings `code:<n>`.
+
+Regla obligatoria:
+
+> Para escribir `code:<n>` en Hyprland, usar el keycode mostrado por `wev`. No copiar directamente el número mostrado por `libinput`.
+
+En la prueba real, estos bindings no funcionaron:
+
+```lua
+hl.bind("code:634", ...)
+hl.bind("code:99", ...)
+```
+
+Los bindings correctos fueron:
+
+```lua
+hl.bind("code:642", hl.dsp.exec_cmd("noctalia msg screenshot-region"))
+hl.bind("code:107", hl.dsp.exec_cmd("noctalia msg screenshot-fullscreen all"))
+```
+
+Los números son específicos del equipo y del evento observado; no deben asumirse en otros teclados.
+
+### Flujo de diagnóstico recomendado
+
+Aplicar un paso, comprobarlo y avanzar solo con evidencia:
+
+```text
+1. identificar el binding actual
+2. desactivarlo temporalmente si interfiere con la medición
+3. usar wev para obtener símbolo y keycode XKB
+4. usar libinput solo si hace falta identificar dispositivo/evento kernel
+5. añadir un único binding
+6. recargar Hyprland
+7. probar la acción
+8. conservar o revertir según el resultado
+```
+
+Para reducir ruido en Fish:
+
+```fish
+wev | grep --line-buffered -E 'key:|sym:'
+```
+
+La ventana de `wev` recibe las pulsaciones. Para cerrar con `Ctrl+C`, puede ser necesario devolver primero el foco a la terminal.
 
 ## Perfiles
 
@@ -168,12 +240,14 @@ Noctalia Standard
 Funciones iniciales:
 
 ```text
-Super           → launcher
-Print           → captura de región
-Shift + Print   → captura completa
-XF86Audio*      → audio y multimedia
-XF86MonBrightness* → brillo
+Super                   → launcher
+captura regional        → acción lógica screenshot.region
+captura completa        → acción lógica screenshot.fullscreen
+XF86Audio*              → audio y multimedia
+XF86MonBrightness*      → brillo
 ```
+
+El perfil no debe asumir `Shift + Print` como combinación universal. Debe resolver las acciones contra los eventos reales emitidos por el teclado o permitir que el usuario los asigne explícitamente.
 
 Los perfiles deben:
 
@@ -182,6 +256,7 @@ Los perfiles deben:
 - detectar colisiones;
 - permitir activar acciones individualmente;
 - registrar qué adaptador resolvió cada comando;
+- registrar cómo fue detectada la tecla;
 - poder exportarse e importarse;
 - poder revertirse.
 
@@ -195,14 +270,24 @@ leer → interpretar → resolver acciones → detectar conflictos
 
 Nunca debe escribirse directamente sobre el archivo activo sin una etapa temporal y una copia recuperable.
 
+Durante diagnóstico interactivo debe respetarse además:
+
+```text
+una hipótesis → un comando o cambio → una prueba → un resultado
+```
+
+No se deben encadenar pasos posteriores antes de verificar que el paso actual funciona.
+
 ## Consideraciones
 
 - Hyprland permite múltiples archivos `source`; deben respetarse.
 - Un mismo atajo puede estar declarado en distintos archivos.
 - La shell puede exponer acciones, pero el binding pertenece al compositor.
-- Las teclas físicas y layouts cambian entre equipos.
+- Las teclas físicas, layouts, firmware y controladores cambian entre equipos.
+- `Fn` puede cambiar el evento en firmware y no llegar como modificador.
 - El sistema principal usa teclado LATAM y Fish, pero los bindings pertenecen a Hyprland, no al shell interactivo.
 - Los ejemplos operativos del proyecto deben ser compatibles con Fish o indicar explícitamente cuando requieren Bash.
+- Toda instrucción de edición debe indicar objetivo, archivo y ubicación exacta antes del cambio.
 - Las acciones deben almacenarse como datos cuando sea posible y no como fragmentos de texto difíciles de validar.
 - Un comando disponible no garantiza que su backend o permisos estén operativos.
 
@@ -213,8 +298,8 @@ Nunca debe escribirse directamente sobre el archivo activo sin una etapa tempora
 - resolver colisiones y prioridades;
 - distinguir atajos del usuario, de Nest y de la shell;
 - implementar resolución por adaptadores;
-- auditar todas las teclas multimedia de la instalación limpia;
-- validar el backend de capturas de Noctalia;
+- auditar las teclas multimedia restantes de la instalación limpia;
+- convertir el flujo de detección con `wev` en un asistente guiado;
 - exportar e importar perfiles;
 - crear interfaz de búsqueda;
 - integrar el diagnóstico antes de recargar Hyprland;
@@ -222,4 +307,4 @@ Nunca debe escribirse directamente sobre el archivo activo sin una etapa tempora
 
 ## Criterio de finalización
 
-El módulo estará listo cuando pueda realizar cambios reversibles sobre un archivo administrado, detectar conflictos globales, verificar las acciones asociadas y demostrar que una actualización o sustitución de Noctalia o Hyprland no destruye los atajos personales ni obliga a reescribir los perfiles desde cero.
+El módulo estará listo cuando pueda realizar cambios reversibles sobre un archivo administrado, detectar conflictos globales, verificar las acciones asociadas, identificar correctamente eventos de teclas especiales y demostrar que una actualización o sustitución de Noctalia o Hyprland no destruye los atajos personales ni obliga a reescribir los perfiles desde cero.
