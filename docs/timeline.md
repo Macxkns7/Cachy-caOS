@@ -1,7 +1,7 @@
 # Timeline de Cachy-caOS
 
 **Estado:** Vigente — registro histórico  
-**Última revisión:** 2026-07-16
+**Última revisión:** 2026-07-18
 
 ## Propósito
 
@@ -49,6 +49,19 @@ Esta etapa queda preservada en `docs/historico/era-omarchy/`.
 - Noctalia se adopta como shell actual.
 - Se establece que la shell debe ser reemplazable y no formar parte del Core.
 - Se investigan otras shells y la dirección futura del ecosistema Wayland.
+
+## 2026-07 — Integración de temas GTK de Noctalia
+
+- Se investiga de extremo a extremo el sistema oficial de plantillas y temas de Noctalia v5.
+- Se comprueba que `gtk3.css` genera una paleta semántica, pero no implementa reglas visuales de widgets.
+- Se confirma que `apply.sh` delega el renderizado GTK3 en `adw-gtk3` o `adw-gtk3-dark` cuando el tema está disponible.
+- Se determina que `adw-gtk-theme` es una dependencia funcional opcional de la integración GTK, no del núcleo de la shell.
+- Se instala `adw-gtk-theme 6.5-1`, protegido por los snapshots 51 y 52.
+- Se aplica el hook completo de Noctalia y el tema activo cambia de `Adwaita` a `adw-gtk3-dark`.
+- Nemo adopta correctamente el modo oscuro, el fondo negro y el acento de la paleta activa.
+- Se fija para Nest el modelo `paleta → adaptador del toolkit → extensión específica`, evitando inicialmente un fork completo de tema GTK.
+
+Fuente técnica: `docs/integraciones/noctalia-temas-y-plantillas.md`.
 
 ## 2026-07 — Noctalia Greeter
 
