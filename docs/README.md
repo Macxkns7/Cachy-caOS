@@ -1,7 +1,7 @@
 # Índice de documentación
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-16
+**Última revisión:** 2026-07-18
 
 Este archivo es el punto de entrada canónico para comprender Cachy-caOS y Nest.
 
@@ -45,6 +45,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | Documento | Estado | Propósito |
 |---|---|---|
 | `integraciones/noctalia-v5.md` | Vigente con investigación abierta | Shell actual, IPC, Polkit y límites con Nest |
+| `integraciones/noctalia-temas-y-plantillas.md` | Vigente con investigación abierta | Motor de plantillas, tokens, GTK y estrategia de extensión de Nest |
 | `integraciones/noctalia-greeter.md` | Vigente | greetd, PAM, Polkit, instalación y recuperación |
 
 ## Investigación
@@ -77,7 +78,8 @@ Cada tema debe tener una sola fuente canónica:
 - reconstrucción → `reconstruccion-desde-cero.md`;
 - WebApps → `modulos/webapps.md`;
 - Keybinds → `modulos/keybinds.md`;
-- Noctalia v5 → `integraciones/noctalia-v5.md`;
+- integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
+- temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.
 
 Otros documentos deben enlazar estas fuentes en lugar de duplicarlas.
