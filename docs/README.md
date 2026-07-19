@@ -39,6 +39,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 |---|---|---|
 | `modulos/webapps.md` | En desarrollo y funcional | Creación e integración de aplicaciones web |
 | `modulos/keybinds.md` | En desarrollo y funcional | Administración segura de atajos de Hyprland |
+| `modulos/visor-imagenes.md` | Vigente y validado | Selección de Loupe, integración con Nemo y estrategia MIME de Nest |
 
 ## Integraciones
 
@@ -78,6 +79,7 @@ Cada tema debe tener una sola fuente canónica:
 - reconstrucción → `reconstruccion-desde-cero.md`;
 - WebApps → `modulos/webapps.md`;
 - Keybinds → `modulos/keybinds.md`;
+- visualizador de imágenes y asociaciones MIME relacionadas → `modulos/visor-imagenes.md`;
 - integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
 - temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.
