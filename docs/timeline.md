@@ -1,7 +1,7 @@
 # Timeline de Cachy-caOS
 
 **Estado:** Vigente — registro histórico  
-**Última revisión:** 2026-07-18
+**Última revisión:** 2026-07-19
 
 ## Propósito
 
@@ -75,6 +75,26 @@ Fuente técnica: `docs/integraciones/noctalia-temas-y-plantillas.md`.
 
 Fuente técnica: `docs/modulos/visor-imagenes.md`.
 
+## 2026-07 — Kitty y comodidad visual
+
+- Se comprueba que Kitty cargaba correctamente `~/.config/kitty/kitty.conf` y los temas de Noctalia.
+- Se identifica que `font_size 11.0` coincidía con el valor predeterminado y por ello no aparecía entre las opciones diferentes del valor por defecto.
+- Se establece `font_size 9.5` como preferencia local validada.
+- Se confirma que las preferencias personales deben permanecer separadas de los archivos de tema generados.
+
+## 2026-07 — Krita en Wayland nativo
+
+- Se observa desenfoque general en la pantalla de carga y en toda la interfaz de Krita 6.0.2.1.
+- Se confirma que la sesión del sistema usa Wayland y que no existen variables globales de Qt alterando el lanzamiento.
+- La prueba `QT_QPA_PLATFORM=wayland krita` elimina inmediatamente el desenfoque.
+- Se determina que la ejecución normal utilizaba XWayland y que el paquete de CachyOS no estaba roto.
+- Se crea un override local de `org.kde.krita.desktop` en `~/.local/share/applications/`.
+- La línea `Exec` se modifica para aplicar `QT_QPA_PLATFORM=wayland` únicamente a Krita.
+- Se actualiza la base XDG y se valida la apertura nítida desde el launcher.
+- Nest incorpora como patrón futuro la administración reversible de overrides XDG y compatibilidad Wayland por aplicación.
+
+Fuente técnica: `docs/modulos/krita-wayland.md`.
+
 ## 2026-07 — Noctalia Greeter
 
 - Se estudia su arquitectura antes de instalarlo.
@@ -90,6 +110,7 @@ Fuente técnica: `docs/modulos/visor-imagenes.md`.
 - Creación de documentación canónica de Nest, metodología, roadmap, research e integraciones.
 - Separación explícita entre documentación vigente e histórica.
 - Inicio de una política de estados y revisiones documentales.
+- Creación de `TABLERO-MAESTRO.md` como fuente operativa para sesiones, prioridades y tareas pendientes.
 
 ## Regla de mantenimiento
 
