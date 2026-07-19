@@ -2,7 +2,7 @@
 
 Fecha de creación: 2026-06-20
 
-Última actualización: 2026-07-16
+Última actualización: 2026-07-18
 
 ---
 
@@ -85,9 +85,51 @@ No se creará una versión propia de una herramienta externa únicamente por est
 
 Nest adoptará e integrará proyectos bien diseñados. Solo se considerará un fork cuando existan necesidades técnicas reales que upstream no pueda o no quiera resolver.
 
-Primer caso validado:
+Primeros casos validados:
 
 * Noctalia Greeter se adopta como backend de login administrado por Nest.
+* Loupe se adopta como visualizador de imágenes sin CSS específico ni fork.
+
+---
+
+# Loupe como visualizador de imágenes oficial
+
+Decisión vigente:
+
+Utilizar Loupe como visualizador de imágenes predeterminado de Cachy-caOS.
+
+Motivos:
+
+* Está construido con GTK4 y libadwaita.
+* Se integra correctamente con Wayland, Noctalia y la identidad visual actual.
+* Abre imágenes de inmediato desde Nemo.
+* Mantiene una interfaz simple, moderna y enfocada en el contenido.
+* Su mantenimiento pertenece al ecosistema GNOME.
+* No requiere personalización específica comprobada.
+
+La instalación de una aplicación y la definición de sus tipos MIME serán responsabilidades separadas dentro de Nest.
+
+El módulo de Loupe deberá instalar la aplicación, mientras un módulo central de asociaciones predeterminadas administrará `org.gnome.Loupe.desktop` para los MIME de imágenes compatibles.
+
+Fuente técnica: `docs/modulos/visor-imagenes.md`.
+
+---
+
+# Asociaciones MIME centralizadas
+
+Decisión vigente:
+
+Nest administrará las aplicaciones predeterminadas mediante una fuente declarativa y un módulo central, en lugar de distribuir comandos `xdg-mime` dentro de cada instalador de aplicación.
+
+Motivos:
+
+* Evitar duplicación y acoplamiento.
+* Permitir sustituir una aplicación sin modificar módulos ajenos.
+* Diagnosticar y validar el estado antes y después de cada cambio.
+* Tratar la asociación MIME como configuración del usuario y no como una propiedad de Nemo u otra aplicación concreta.
+* Mantener el proceso reproducible, auditable e idempotente.
+
+La operación debe cambiar únicamente el valor predeterminado y conservar registradas las aplicaciones alternativas.
 
 ---
 
@@ -235,6 +277,12 @@ Motivos:
 ---
 
 # Historial de cambios
+
+## 2026-07-18
+
+* Loupe adoptado como visualizador de imágenes oficial.
+* Separadas las responsabilidades de instalación de aplicaciones y asociaciones MIME.
+* Definida una estrategia centralizada y declarativa para aplicaciones predeterminadas en Nest.
 
 ## 2026-07-16
 
