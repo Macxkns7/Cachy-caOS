@@ -1,7 +1,7 @@
 # Configuraciones importantes
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-18  
+**Última revisión:** 2026-07-19  
 **Histórico relacionado:** `docs/historico/era-omarchy/configuraciones-importantes-2026-06-20.md`
 
 ## Objetivo
@@ -17,6 +17,20 @@ Registrar las configuraciones críticas que permiten mantener, diagnosticar y re
 - Shell interactiva: Fish.
 
 Nest debe permanecer desacoplado de Noctalia para permitir sustituir la shell sin alterar el Core.
+
+## Terminal Kitty
+
+Estado comprobado:
+
+- archivo principal: `~/.config/kitty/kitty.conf`;
+- temas cargados mediante `include`;
+- tamaño de fuente personalizado: `font_size 9.5`;
+- fuente efectiva observada: Noto Sans Mono;
+- backend: Wayland nativo.
+
+La configuración efectiva puede inspeccionarse desde Kitty y solo muestra como diferencias las opciones que no coinciden con los valores predeterminados. Por ello, una prueba de configuración no debe utilizar exactamente el valor por defecto.
+
+Las preferencias personales, como tamaño o familia de fuente, deben vivir fuera de los archivos generados por el sistema de temas para evitar que Noctalia las sobrescriba.
 
 ## Integración visual GTK
 
@@ -108,6 +122,39 @@ Nest deberá separar la instalación de Loupe de un módulo central para asociac
 
 Fuente canónica: `docs/modulos/visor-imagenes.md`.
 
+## Krita y compatibilidad Wayland
+
+Estado comprobado:
+
+- paquete: `krita 6.0.2.1-2.1`;
+- repositorio: `cachyos-extra-v4`;
+- arquitectura: `x86_64_v4`;
+- la ejecución normal presentaba una interfaz borrosa por XWayland;
+- la ejecución con `QT_QPA_PLATFORM=wayland` fue validada como nítida;
+- no fue necesario reemplazar el paquete por AppImage o Flatpak.
+
+Override local activo:
+
+```text
+~/.local/share/applications/org.kde.krita.desktop
+```
+
+Línea de lanzamiento efectiva:
+
+```ini
+Exec=env QT_QPA_PLATFORM=wayland krita %F
+```
+
+Después de modificar una Desktop Entry local se actualiza la base XDG:
+
+```fish
+update-desktop-database ~/.local/share/applications
+```
+
+No exportar globalmente `QT_QPA_PLATFORM=wayland`. Las variables de compatibilidad deben aplicarse por aplicación y solo después de una validación comparativa.
+
+Fuente canónica: `docs/modulos/krita-wayland.md`.
+
 ## Inicio de sesión
 
 - Display manager: greetd.
@@ -128,6 +175,8 @@ Las aplicaciones y WebApps deben mantener coherencia entre:
 - `class` o `app_id` real de la ventana;
 - iconos instalados en rutas estándar.
 
+Los overrides de lanzamiento administrados por el usuario deben vivir en `~/.local/share/applications/` y nunca modificar directamente los archivos pertenecientes a paquetes en `/usr/share/applications/`.
+
 Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 
 ## Teclado y shell
@@ -141,6 +190,7 @@ Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 - EasyEffects disponible para perfiles de audio.
 - La instalación actual utiliza el gestor de energía predeterminado de CachyOS.
 - La configuración anterior basada en `auto-cpufreq` pertenece a una instalación histórica y no debe aplicarse al sistema vigente.
+- El apartado de audio permanece en revisión operativa.
 
 ## WebApps
 
@@ -155,6 +205,7 @@ Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 - Mantener backup previo al modificar PAM, display manager o archivos del sistema.
 - Toda migración debe incluir una ruta de rollback comprobable.
 - La instalación de `adw-gtk-theme` quedó protegida por los snapshots 51 y 52.
+- Los cambios de Desktop Entries deben realizarse mediante overrides locales reversibles.
 
 ## Regla operativa
 
