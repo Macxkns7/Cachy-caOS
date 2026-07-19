@@ -63,6 +63,18 @@ Esta etapa queda preservada en `docs/historico/era-omarchy/`.
 
 Fuente técnica: `docs/integraciones/noctalia-temas-y-plantillas.md`.
 
+## 2026-07 — Loupe como visualizador de imágenes
+
+- Se comparan visores modernos y se adopta Loupe como opción oficial para Cachy-caOS.
+- Se instala `loupe 50.0-1.1` desde `cachyos-extra-v4` para arquitectura `x86_64_v4`.
+- Se valida su integración GTK4/libadwaita con Noctalia, su apertura inmediata y su navegación fluida.
+- Nemo conserva inicialmente `gmic_qt.desktop` como aplicación predeterminada para JPEG.
+- Se diagnostica la asociación mediante `xdg-mime` y `gio mime`.
+- Se asigna `org.gnome.Loupe.desktop` a los MIME de imagen comunes y se valida la apertura directa desde Nemo.
+- Nest adopta la separación entre instalación de aplicaciones y administración centralizada de asociaciones MIME.
+
+Fuente técnica: `docs/modulos/visor-imagenes.md`.
+
 ## 2026-07 — Noctalia Greeter
 
 - Se estudia su arquitectura antes de instalarlo.
