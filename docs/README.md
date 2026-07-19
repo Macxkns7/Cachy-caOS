@@ -1,7 +1,7 @@
 # Índice de documentación
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-18
+**Última revisión:** 2026-07-19
 
 Este archivo es el punto de entrada canónico para comprender Cachy-caOS y Nest.
 
@@ -13,6 +13,12 @@ Este archivo es el punto de entrada canónico para comprender Cachy-caOS y Nest.
 - **Pendiente de reemplazo:** se mantiene temporalmente mientras se crea una fuente canónica.
 
 Las reglas completas están en `docs/convenciones-documentales.md`.
+
+## Tablero operativo
+
+| Documento | Estado | Propósito |
+|---|---|---|
+| `TABLERO-MAESTRO.md` | Vivo | Fuente operativa para revisar terminados, pendientes, trabajo activo y nuevos hallazgos al comenzar cada sesión |
 
 ## Proyecto actual
 
@@ -40,6 +46,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | `modulos/webapps.md` | En desarrollo y funcional | Creación e integración de aplicaciones web |
 | `modulos/keybinds.md` | En desarrollo y funcional | Administración segura de atajos de Hyprland |
 | `modulos/visor-imagenes.md` | Vigente y validado | Selección de Loupe, integración con Nemo y estrategia MIME de Nest |
+| `modulos/krita-wayland.md` | Vigente y validado | Diagnóstico de XWayland, override local de Krita y patrón de compatibilidad Wayland para Nest |
 
 ## Integraciones
 
@@ -71,6 +78,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 
 Cada tema debe tener una sola fuente canónica:
 
+- estado operativo y prioridades → `TABLERO-MAESTRO.md`;
 - visión y principios → `nest/00-vision-y-principios.md`;
 - metodología → `nest/01-metodologia-operativa.md`;
 - implementación de Nest → `nest/03-estado-de-implementacion.md`;
@@ -80,6 +88,7 @@ Cada tema debe tener una sola fuente canónica:
 - WebApps → `modulos/webapps.md`;
 - Keybinds → `modulos/keybinds.md`;
 - visualizador de imágenes y asociaciones MIME relacionadas → `modulos/visor-imagenes.md`;
+- Krita, XWayland y override de lanzamiento → `modulos/krita-wayland.md`;
 - integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
 - temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.
