@@ -57,6 +57,57 @@ No utilizar `--appearance-only` para seleccionar el tema GTK: esa opción sincro
 
 Fuente canónica: `docs/integraciones/noctalia-temas-y-plantillas.md`.
 
+## Visualizador de imágenes
+
+Estado comprobado:
+
+- aplicación oficial: Loupe;
+- paquete validado: `loupe 50.0-1.1`;
+- repositorio: `cachyos-extra-v4`;
+- arquitectura: `x86_64_v4`;
+- Desktop ID: `org.gnome.Loupe.desktop`;
+- integración: GTK4 + libadwaita;
+- apertura desde Nemo: validada;
+- personalización CSS específica: no requerida actualmente.
+
+Asociación predeterminada esperada para JPEG:
+
+```fish
+xdg-mime query default image/jpeg
+```
+
+Resultado:
+
+```text
+org.gnome.Loupe.desktop
+```
+
+Verificación alternativa:
+
+```fish
+gio mime image/jpeg
+```
+
+Los MIME de imagen administrados actualmente son:
+
+```text
+image/jpeg
+image/png
+image/webp
+image/gif
+image/bmp
+image/tiff
+image/svg+xml
+image/avif
+image/heif
+```
+
+La instalación inicial detectó `gmic_qt.desktop` como predeterminado para JPEG. La corrección se realizó mediante `xdg-mime` y no requirió modificar Nemo.
+
+Nest deberá separar la instalación de Loupe de un módulo central para asociaciones MIME.
+
+Fuente canónica: `docs/modulos/visor-imagenes.md`.
+
 ## Inicio de sesión
 
 - Display manager: greetd.
