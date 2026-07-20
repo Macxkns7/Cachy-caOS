@@ -2,11 +2,13 @@
 
 **Estado:** Vigente con desarrollo pendiente  
 **Última revisión:** 2026-07-18  
-**Relacionado con:** `docs/integraciones/noctalia-v5.md`, `docs/configuraciones-importantes.md`
+**Relacionado con:** `docs/integraciones/noctalia-v5.md`, `docs/configuraciones-importantes.md`, `docs/modulos/iconos-sistema.md`
 
 ## Objetivo
 
 Documentar el funcionamiento comprobado del sistema de temas y plantillas de Noctalia v5, con énfasis en la integración GTK3 validada de extremo a extremo en Cachy-caOS.
+
+El tema de iconos no forma parte del motor de paletas de Noctalia. Su integración GTK/Qt y la persistencia del proveedor se documentan por separado en `docs/modulos/iconos-sistema.md`.
 
 Este documento distingue entre:
 
