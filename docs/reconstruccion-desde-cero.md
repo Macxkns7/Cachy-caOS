@@ -83,7 +83,6 @@ Prioridad inicial:
 - Verificar que binarios instalados manualmente tengan todas sus bibliotecas runtime.
 - Confirmar `ldd /usr/bin/noctalia-greeter-compositor` sin entradas `not found`.
 - Conservar `wlroots0.20` y `libliftoff` mientras el greeter continúe instalado manualmente.
-
 - Configurar Snapper.
 - Establecer límites de snapshots.
 - Crear snapshot antes y después de migraciones críticas.
