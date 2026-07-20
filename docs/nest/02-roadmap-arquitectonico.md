@@ -48,9 +48,12 @@ Objetivo: desacoplar la experiencia visual del Core.
 - Display Manager Adapter.
 - Launcher Adapter.
 - Theme Adapter.
+- Appearance / System Icons con manifiesto declarativo.
+- adaptadores `gtk-gsettings`, `qt6ct`, `hyprqt6engine`, entorno de Hyprland y `papirus-folders`.
+- reparación post-update de variantes de iconos y carpetas.
 - mecanismos para detectar capacidades en vez de asumir herramientas concretas.
 
-Noctalia v5 es la shell actual, pero no debe convertirse en una dependencia crítica. Otras shells podrán integrarse mediante adaptadores cuando exista una necesidad real.
+El módulo de iconos debe conservar la identidad visual aunque cambie la shell y debe editar solamente las claves que administra. Noctalia v5 es la shell actual, pero no debe convertirse en una dependencia crítica. Otras shells podrán integrarse mediante adaptadores cuando exista una necesidad real.
 
 ## Etapa 4 — integraciones administradas
 
