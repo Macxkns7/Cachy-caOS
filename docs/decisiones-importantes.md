@@ -162,6 +162,29 @@ Fuente técnica: `docs/modulos/iconos-sistema.md`.
 
 ---
 
+# Limpieza guiada por utilidad y resiliencia
+
+Decisión vigente:
+
+Cachy-caOS no perseguirá un número mínimo de paquetes como objetivo en sí mismo. Una herramienta o capacidad se retirará cuando sea redundante, esté reemplazada o no aporte utilidad real; se conservará cuando su posible valor futuro supere un ahorro mínimo.
+
+Casos validados:
+
+* Nemo reemplaza definitivamente a Dolphin.
+* mpv reemplaza a VLC.
+* greetd + Noctalia Greeter reemplazan a SDDM.
+* Kitty reemplaza a Alacritty.
+* Fish reemplaza la configuración Zsh.
+* Btrfs Assistant, Meld, Galculator y capacidades de red se conservan conscientemente.
+* Los dos kernels se conservan; sus headers se retiraron mientras no exista DKMS.
+* La caché mantiene dos versiones de paquetes instalados para rollback.
+
+Antes de retirar bibliotecas, Nest deberá inspeccionar también binarios no propiedad de pacman. `Required By: None` no prueba que una biblioteca carezca de consumidores runtime.
+
+Fuente técnica: `docs/modulos/limpieza-sistema.md`.
+
+---
+
 # Minimalismo antes que complejidad
 
 Decisión vigente:
@@ -271,7 +294,7 @@ Toda sustitución crítica debe incluir respaldo, validación y ruta de recupera
 
 Ejemplo aplicado:
 
-Durante la migración de SDDM a greetd + Noctalia Greeter se mantuvo SDDM instalado, se habilitó una TTY de rescate y se validaron PAM, Polkit, binarios, assets y sesiones antes del cambio final.
+Durante la migración de SDDM a greetd + Noctalia Greeter se mantuvo SDDM instalado, se habilitó una TTY de rescate y se validaron PAM, Polkit, binarios, assets y sesiones antes del cambio final. Tras estabilizar greetd, SDDM fue retirado y la TTY quedó como recuperación primaria; un display manager alternativo deberá reinstalarse explícitamente si llega a ser necesario.
 
 ---
 
@@ -309,6 +332,10 @@ Motivos:
 
 ## 2026-07-20
 
+* Limpieza controlada completada con 92 paquetes netos retirados.
+* Nemo, mpv y greetd consolidados frente a Dolphin, VLC y SDDM.
+* Adoptada auditoría ELF para dependencias runtime fuera de pacman.
+* Conservación de capacidades futuras priorizada frente a ahorros mínimos.
 * Papirus-Dark adoptado como tema de iconos validado.
 * Carpetas `violet` adoptadas para el perfil Lilac AMOLED.
 * Iconos definidos como capacidad transversal de Nest con adaptadores GTK, Qt, entorno y reparación.
