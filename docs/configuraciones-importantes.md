@@ -214,6 +214,7 @@ Fuente canónica: `docs/modulos/krita-wayland.md`.
 - Sesión válida actual: `Hyprland`.
 - Evitar `Hyprland (uwsm-managed)` mientras `uwsm` no esté instalado.
 - TTY de recuperación: `getty@tty2.service` habilitado.
+- SDDM no está instalado; cualquier fallback alternativo debe instalarse antes de cambiar servicios.
 
 Documentación detallada: `docs/integraciones/noctalia-greeter.md`.
 
@@ -258,6 +259,35 @@ Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 - Toda migración debe incluir una ruta de rollback comprobable.
 - La instalación de `adw-gtk-theme` quedó protegida por los snapshots 51 y 52.
 - Los cambios de Desktop Entries deben realizarse mediante overrides locales reversibles.
+
+## Limpieza y estado de dependencias
+
+Estado validado el 2026-07-20:
+
+- 92 paquetes netos retirados;
+- cero huérfanos;
+- cero servicios fallidos;
+- 141 archivos de caché de paquetes desinstalados retirados;
+- 438.28 MiB recuperados de caché;
+- Nemo predeterminado para `inode/directory`;
+- mpv predeterminado para `video/mp4` y `audio/mpeg`;
+- greetd activo y habilitado;
+- SDDM, Dolphin, VLC, Alacritty, Shelly y herramientas redundantes retirados;
+- `wlroots0.20` y `libliftoff` instalados por dependencia runtime del greeter.
+
+Comprobación crítica:
+
+```fish
+ldd /usr/bin/noctalia-greeter-compositor | grep -E 'wlroots|not found'
+```
+
+Resultado esperado:
+
+```text
+libwlroots-0.20.so => /usr/lib/libwlroots-0.20.so
+```
+
+Fuente canónica: `docs/modulos/limpieza-sistema.md`.
 
 ## Regla operativa
 
