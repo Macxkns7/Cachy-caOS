@@ -70,7 +70,12 @@ Prioridad inicial:
 - Layout LATAM.
 - EasyEffects.
 - auto-cpufreq.
-- Tema, wallpaper e iconos.
+- Tema y wallpaper.
+- `papirus-icon-theme` y `qt6ct` desde repositorios oficiales.
+- `Papirus-Dark` aplicado en GTK y Qt.
+- `QT_QPA_PLATFORMTHEME=qt6ct` cargado antes de Noctalia.
+- Papirus Folders v1.14.0 y variante `violet` como perfil validado.
+- Verificación y rollback según `docs/modulos/iconos-sistema.md`.
 - Vivaldi y perfiles de navegación.
 
 ## Fase 8 — Seguridad
