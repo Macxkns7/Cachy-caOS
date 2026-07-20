@@ -206,6 +206,26 @@ Ejemplos:
 
 ---
 
+# Visibilidad del launcher separada de la instalación
+
+Decisión vigente:
+
+Nest administrará las aplicaciones del launcher mediante tres capas: General, Avanzado y Oculto. Cambiar la visibilidad de una Desktop Entry no implica retirar su paquete ni eliminar su capacidad.
+
+Motivos:
+
+* Mantener una primera capa visual enfocada en aplicaciones cotidianas.
+* Conservar herramientas de mantenimiento, diagnóstico y desarrollo en un acceso explícito.
+* Ocultar auxiliares y pruebas sin perder ejecutables ni integraciones internas.
+* Evitar editar archivos administrados por pacman o parchear el núcleo de una shell.
+* Permitir diagnóstico, sincronización post-update y rollback.
+
+La política usará Desktop IDs estables y overrides XDG locales. Noctalia materializa actualmente la capa avanzada mediante un proveedor `/adv` construido sobre su API pública, pero la clasificación pertenecerá al Core de Nest y deberá sobrevivir a un cambio de shell.
+
+Fuente técnica: `docs/modulos/organizacion-launcher.md`.
+
+---
+
 # Personalización con propósito
 
 Decisión vigente:
@@ -340,6 +360,10 @@ Motivos:
 * Carpetas `violet` adoptadas para el perfil Lilac AMOLED.
 * Iconos definidos como capacidad transversal de Nest con adaptadores GTK, Qt, entorno y reparación.
 * `qt6ct` validado como proveedor Qt actual; `hyprland-qt-support` descartado para esta función.
+* Validada la organización del launcher en General, Avanzado y Oculto sin desinstalar paquetes.
+* Validado `nest/advanced` v0.2.0 como proveedor `/adv` de Noctalia con doce herramientas.
+* Ocultadas siete entradas auxiliares y preservadas sus funciones y ejecutables.
+* Definida Launcher Policy como capacidad del Core con adaptadores XDG y de shell.
 
 ## 2026-07-18
 
