@@ -71,6 +71,58 @@ No utilizar `--appearance-only` para seleccionar el tema GTK: esa opción sincro
 
 Fuente canónica: `docs/integraciones/noctalia-temas-y-plantillas.md`.
 
+## Iconos del sistema
+
+Estado comprobado:
+
+- paquete: `papirus-icon-theme`;
+- tema GTK: `Papirus-Dark`;
+- proveedor Qt 6: `qt6ct`;
+- tema Qt: `Papirus-Dark`;
+- estilo Qt conservado: `Fusion`;
+- entorno de sesión: `QT_QPA_PLATFORMTHEME=qt6ct`;
+- variante de carpetas: `violet`;
+- utilidad local: `~/.local/bin/papirus-folders` v1.14.0.
+
+Configuración GTK:
+
+```fish
+gsettings get org.gnome.desktop.interface icon-theme
+```
+
+Resultado esperado:
+
+```text
+'Papirus-Dark'
+```
+
+Configuración Qt:
+
+```text
+~/.config/qt6ct/qt6ct.conf
+```
+
+Claves esperadas:
+
+```ini
+icon_theme=Papirus-Dark
+style=Fusion
+```
+
+Persistencia en `~/.config/hypr/hyprland.lua`:
+
+```lua
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+```
+
+La variable debe declararse antes del evento que inicia Noctalia. El color de carpetas puede repararse después de una actualización mediante:
+
+```fish
+papirus-folders -Ru
+```
+
+Fuente canónica: `docs/modulos/iconos-sistema.md`.
+
 ## Visualizador de imágenes
 
 Estado comprobado:
