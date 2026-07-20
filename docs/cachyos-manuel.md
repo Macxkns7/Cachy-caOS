@@ -43,6 +43,8 @@ El proyecto busca una experiencia modular, comprensible, reversible y documentad
 7. Migración de SDDM a greetd + Noctalia Greeter.
 8. Inicio de una arquitectura documental y técnica propia.
 9. Adopción de Papirus-Dark y carpetas violetas con integración GTK/Qt documentada para Nest.
+10. Limpieza controlada del sistema y consolidación de Nemo, mpv y greetd.
+11. Incorporación de auditoría ELF al diseño de System Doctor.
 
 ## Estado
 
