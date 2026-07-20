@@ -2,7 +2,7 @@
 
 Fecha de creación: 2026-06-20
 
-Última actualización: 2026-07-18
+Última actualización: 2026-07-20
 
 ---
 
@@ -130,6 +130,35 @@ Motivos:
 * Mantener el proceso reproducible, auditable e idempotente.
 
 La operación debe cambiar únicamente el valor predeterminado y conservar registradas las aplicaciones alternativas.
+
+---
+
+# Iconos del sistema como capacidad transversal
+
+Decisión vigente:
+
+Papirus-Dark será el tema de iconos validado para el perfil visual actual, con carpetas `violet`. Nest administrará los iconos como una capacidad transversal del Core y no como una función propia de Noctalia.
+
+La integración se dividirá en adaptadores:
+
+* tema Freedesktop instalado;
+* GTK mediante `gsettings`;
+* Qt mediante un proveedor de plataforma;
+* entorno de Hyprland antes del arranque de la shell;
+* variantes y reparación de Papirus Folders.
+
+Motivos:
+
+* Noctalia no guarda una selección de tema de iconos.
+* GTK y Qt consumen configuraciones distintas.
+* La shell debe poder reemplazarse sin perder la identidad visual.
+* Las actualizaciones de Papirus pueden restaurar el color de carpetas.
+* La operación futura debe poder diagnosticar, aplicar, verificar, reparar y revertir.
+* La configuración de terceros debe editarse por claves y no reemplazarse completa.
+
+`qt6ct` es el proveedor Qt validado actualmente. `hyprland-qt-support` no cumple esa función. `hyprqt6engine` solo se adoptará cuando esté disponible y sea comprobado en el sistema real.
+
+Fuente técnica: `docs/modulos/iconos-sistema.md`.
 
 ---
 
@@ -277,6 +306,13 @@ Motivos:
 ---
 
 # Historial de cambios
+
+## 2026-07-20
+
+* Papirus-Dark adoptado como tema de iconos validado.
+* Carpetas `violet` adoptadas para el perfil Lilac AMOLED.
+* Iconos definidos como capacidad transversal de Nest con adaptadores GTK, Qt, entorno y reparación.
+* `qt6ct` validado como proveedor Qt actual; `hyprland-qt-support` descartado para esta función.
 
 ## 2026-07-18
 
