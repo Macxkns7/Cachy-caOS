@@ -70,9 +70,10 @@ Posibles funciones:
 - sincronizar apariencia;
 - seleccionar sesión válida;
 - alternar display manager;
-- restaurar SDDM;
+- diagnosticar desde TTY y reinstalar un display manager alternativo cuando sea necesario;
 - abrir logs;
-- detectar errores de `TryExec`.
+- detectar errores de `TryExec`;
+- inspeccionar binarios ELF no empaquetados y bibliotecas runtime ausentes.
 
 ## Etapa 5 — instalador y reconstrucción
 
