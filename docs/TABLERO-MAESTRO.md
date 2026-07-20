@@ -136,7 +136,8 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Investigación de shells alternativas y dirección del ecosistema.
 - ✅ Integración de temas y plantillas GTK documentada.
 - ✅ Noctalia Greeter + greetd instalados y validados.
-- ✅ Ruta de recuperación mediante TTY y conservación temporal de SDDM durante la migración.
+- ✅ SDDM retirado tras validar greetd; TTY conservada como recuperación primaria.
+- ✅ Dependencia runtime `wlroots0.20` del greeter restaurada y documentada.
 - 🔬 Seguir observando límites, IPC y puntos de integración con Nest.
 - ⏳ Diseñar Shell Adapter y Theme Adapter.
 - ⏳ Evitar que cualquier función crítica dependa de Noctalia.
@@ -170,6 +171,12 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 
 ## 2026-07-20
 
+- ✅ Completada limpieza controlada: 92 paquetes netos retirados, cero huérfanos y cero servicios fallidos.
+- ✅ Nemo consolidado como gestor de archivos; Dolphin retirado.
+- ✅ mpv consolidado como reproductor; VLC retirado.
+- ✅ SDDM retirado después de validar greetd.
+- ✅ Eliminados 141 archivos de caché de paquetes desinstalados, recuperando 438.28 MiB.
+- ✅ Detectada y reparada dependencia ELF de Noctalia Greeter invisible para pacman.
 - ✅ Instalado `papirus-icon-theme` desde repositorios oficiales.
 - ✅ Activado `Papirus-Dark` mediante `gsettings` y `qt6ct`.
 - ✅ Persistido `QT_QPA_PLATFORMTHEME=qt6ct` en la configuración Lua de Hyprland.
@@ -208,6 +215,7 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ⏳ Integrar reparación de Papirus Folders en System Doctor.
 - ⏳ Cerrar v0.4 de Nest UI y normalizar contratos.
 - ⏳ Diseñar System Doctor y revisión post-update.
+- ⏳ Incorporar detección de ELF no empaquetados y bibliotecas ausentes.
 - ⏳ Completar la reconstrucción reproducible desde cero.
 - ⏳ Importar el icono maestro de Nest al árbol de código.
 - ⏳ Diseñar instalador y actualizador.
@@ -238,3 +246,4 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - Loupe y MIME: `docs/modulos/visor-imagenes.md`.
 - Krita y Wayland: `docs/modulos/krita-wayland.md`.
 - Iconos del sistema: `docs/modulos/iconos-sistema.md`.
+- Limpieza y auditoría ELF: `docs/modulos/limpieza-sistema.md`.
