@@ -31,6 +31,24 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 
 Ambos módulos han sido probados de forma independiente y desde el lanzador principal.
 
+### Organización del launcher
+
+Estado: **prototipo funcional y validado en el sistema real**.
+
+Capacidades confirmadas:
+
+- clasificación en General, Avanzado y Oculto sin desinstalar paquetes;
+- siete entradas auxiliares ocultas mediante overrides XDG locales;
+- doce herramientas técnicas retiradas del proveedor general;
+- plugin local `nest/advanced` v0.2.0 compatible con la Plugin API 4 de Noctalia;
+- proveedor `/adv` con iconos, descripciones, búsqueda difusa y ejecución gráfica o en terminal;
+- integración de File Roller con Nemo conservada después de ocultar su acceso directo;
+- cero archivos de paquetes o del núcleo de Noctalia modificados.
+
+La prueba valida el futuro contrato Launcher Policy + Launcher Adapter. La política pertenece al Core; `/adv` es solamente su materialización para la shell actual.
+
+Fuente: `docs/modulos/organizacion-launcher.md`.
+
 ### WebApps v0.6 Beta
 
 Estado: **funcional y validado en el sistema real**.
@@ -105,6 +123,8 @@ El instalador futuro será responsable de transformar el árbol `src/` en las ru
 - Fish es el shell interactivo principal del sistema; los comandos mostrados al usuario deben ser compatibles con Fish o indicar explícitamente otro intérprete.
 - El tema de iconos es una capacidad transversal del Core y se implementará mediante adaptadores GTK, Qt, entorno y variantes de carpetas.
 - Los adaptadores deben modificar únicamente claves propias, preservar configuración ajena y ofrecer `detect`, `plan`, `apply`, `verify`, `repair` y `rollback`.
+- La visibilidad del launcher es una política separada de la instalación de paquetes y debe usar Desktop IDs estables.
+- Los overrides completos de Desktop Entries deben detectar deriva y sincronizarse después de actualizaciones sin destruir cambios ajenos.
 - System Doctor deberá complementar pacman con auditoría ELF para detectar consumidores runtime instalados manualmente.
 
 ## Estado de Nest UI
@@ -148,6 +168,8 @@ La combinación fue comprobada en el sistema real: el icono aparece correctament
 - El estado de versión aún no está centralizado.
 - Falta una interfaz estable entre los módulos y el Core.
 - WebApps todavía usa una convención específica de Vivaldi para calcular la identidad Wayland.
+- El prototipo `nest/advanced` y su manifiesto de clasificación aún no forman parte del árbol canónico de código.
+- Los overrides locales del launcher requieren un reconciliador post-update antes de poder administrarse automáticamente.
 
 ## Hallazgo de limpieza y dependencias runtime
 
@@ -185,15 +207,17 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 
 1. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
 2. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
-3. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
-4. Cerrar la v0.4 de la TUI.
-5. Normalizar estructura y rutas.
-6. Definir contratos de módulos.
-7. Crear diagnóstico común.
-8. Diseñar instalador y actualizador para desplegar `src/`.
-9. Incorporar el módulo Keybinds al árbol de código fuente.
-10. Diseñar adaptadores de identidad para otros navegadores.
-11. Iniciar una interfaz gráfica sin acoplarla a la shell.
+3. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
+4. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
+5. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+6. Cerrar la v0.4 de la TUI.
+7. Normalizar estructura y rutas.
+8. Definir contratos de módulos.
+9. Crear diagnóstico común.
+10. Diseñar instalador y actualizador para desplegar `src/`.
+11. Incorporar el módulo Keybinds al árbol de código fuente.
+12. Diseñar adaptadores de identidad para otros navegadores.
+13. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 

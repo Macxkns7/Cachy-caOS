@@ -1,7 +1,7 @@
 # Integración de Noctalia v5
 
 **Estado:** Vigente con investigación abierta  
-**Última revisión:** 2026-07-17
+**Última revisión:** 2026-07-20
 
 ## Rol en Cachy-caOS
 
@@ -91,6 +91,36 @@ noctalia msg panel-toggle launcher
 ```
 
 Funciona correctamente y reemplazó un binding anterior hacia `hyprlauncher`, cuyo ejecutable no estaba instalado.
+
+### Proveedor avanzado de Nest
+
+Noctalia v5 permite proveedores prefijados mediante su Plugin API pública. Se validó un plugin local:
+
+```text
+id: nest/advanced
+versión: 0.2.0
+plugin_api: 4
+min_noctalia: 5.0.0
+prefijo: /adv
+include_in_global_search: false
+```
+
+El proveedor presenta doce herramientas administrativas y de desarrollo en una segunda capa visual. Usa `launcher.setResults()`, `noctalia.fuzzyScore()`, `noctalia.runAsync()` y `noctalia.runInTerminal()`; no modifica el núcleo de Noctalia.
+
+La navegación comprobada es:
+
+```text
+/adv
+→ N.E.S.T. · Avanzado
+→ buscar o recorrer herramientas
+→ ejecutar
+```
+
+Las categorías nativas no admiten grupos arbitrarios definidos por el usuario. El proveedor prefijado evita parchear la shell y mantiene la integración dentro de una interfaz pública, aunque la Plugin API continúa en beta y debe validarse por versión.
+
+La política General/Avanzado/Oculto pertenece a Nest. El plugin es solo la materialización del adaptador Noctalia.
+
+Fuente técnica: `docs/modulos/organizacion-launcher.md`.
 
 ### Selector nativo de caracteres
 

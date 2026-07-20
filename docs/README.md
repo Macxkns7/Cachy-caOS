@@ -49,6 +49,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | `modulos/krita-wayland.md` | Vigente y validado | Diagnóstico de XWayland, override local de Krita y patrón de compatibilidad Wayland para Nest |
 | `modulos/iconos-sistema.md` | Vigente y validado; automatización pendiente | Papirus, integración GTK/Qt, carpetas violetas y diseño del módulo de apariencia de Nest |
 | `modulos/limpieza-sistema.md` | Vigente y validado | Auditoría, eliminación controlada, caché y dependencias ELF invisibles para pacman |
+| `modulos/organizacion-launcher.md` | Prototipo funcional y validado; automatización pendiente | Política General/Avanzado/Oculto, overrides XDG y proveedor `/adv` de Noctalia |
 
 ## Integraciones
 
@@ -93,6 +94,7 @@ Cada tema debe tener una sola fuente canónica:
 - Krita, XWayland y override de lanzamiento → `modulos/krita-wayland.md`;
 - iconos del sistema, GTK/Qt y variantes de carpetas → `modulos/iconos-sistema.md`;
 - limpieza, dependencias runtime y auditoría post-eliminación → `modulos/limpieza-sistema.md`;
+- organización del launcher, visibilidad XDG y capa avanzada → `modulos/organizacion-launcher.md`;
 - integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
 - temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.

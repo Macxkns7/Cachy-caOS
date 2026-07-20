@@ -123,6 +123,21 @@ Fuente técnica: `docs/modulos/iconos-sistema.md`.
 
 Fuente técnica: `docs/modulos/limpieza-sistema.md`.
 
+## 2026-07 — Launcher organizado en General, Avanzado y Oculto
+
+- Se auditan las Desktop Entries visibles y los paquetes que las proporcionan.
+- Se determina que el ruido visual provenía de mezclar aplicaciones cotidianas, herramientas avanzadas y auxiliares internos.
+- Se ocultan siete accesos auxiliares mediante overrides XDG locales sin retirar sus paquetes.
+- Se valida que los siete ejecutables continúan disponibles y que File Roller conserva su integración ZIP con Nemo.
+- Se crea el plugin local `nest/advanced` v0.2.0 para la Plugin API 4 de Noctalia.
+- El proveedor `/adv` presenta doce herramientas administrativas y de desarrollo con iconos, descripciones, búsqueda difusa y ejecución gráfica o en terminal.
+- Se retiran las doce Desktop Entries avanzadas del proveedor general mediante overrides reversibles.
+- No se modifica el núcleo de Noctalia ni ningún archivo administrado por pacman.
+- Nest adopta Launcher Policy como capacidad del Core y reserva a cada shell la materialización de la capa avanzada.
+- Se identifica la necesidad de reconciliar overrides completos cuando los paquetes actualicen sus Desktop Entries.
+
+Fuente técnica: `docs/modulos/organizacion-launcher.md`.
+
 ## 2026-07 — Noctalia Greeter
 
 - Se estudia su arquitectura antes de instalarlo.

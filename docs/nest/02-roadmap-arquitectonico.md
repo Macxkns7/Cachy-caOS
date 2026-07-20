@@ -47,13 +47,17 @@ Objetivo: desacoplar la experiencia visual del Core.
 - Shell Adapter.
 - Display Manager Adapter.
 - Launcher Adapter.
+- Launcher Policy con clasificación declarativa General, Avanzado y Oculto.
 - Theme Adapter.
 - Appearance / System Icons con manifiesto declarativo.
 - adaptadores `gtk-gsettings`, `qt6ct`, `hyprqt6engine`, entorno de Hyprland y `papirus-folders`.
 - reparación post-update de variantes de iconos y carpetas.
 - mecanismos para detectar capacidades en vez de asumir herramientas concretas.
+- overrides XDG idempotentes, sincronización post-update y proveedores avanzados por shell.
 
 El módulo de iconos debe conservar la identidad visual aunque cambie la shell y debe editar solamente las claves que administra. Noctalia v5 es la shell actual, pero no debe convertirse en una dependencia crítica. Otras shells podrán integrarse mediante adaptadores cuando exista una necesidad real.
+
+La política del launcher debe permanecer en el Core y usar Desktop IDs estables. El adaptador XDG administrará visibilidad local; el adaptador Noctalia podrá materializar la capa avanzada mediante un proveedor `/adv`; otras shells deberán ofrecer una experiencia equivalente sin cambiar la clasificación declarada por el usuario.
 
 ## Etapa 4 — integraciones administradas
 
