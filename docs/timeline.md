@@ -109,6 +109,20 @@ Fuente técnica: `docs/modulos/krita-wayland.md`.
 
 Fuente técnica: `docs/modulos/iconos-sistema.md`.
 
+## 2026-07 — Limpieza controlada del sistema
+
+- Se inventarían paquetes, servicios, timers, aplicaciones, asociaciones y caché.
+- Se retiran herramientas redundantes en dos tandas simuladas y verificadas.
+- Nemo sustituye definitivamente a Dolphin; mpv sustituye a VLC; greetd sustituye a SDDM.
+- Se eliminan 92 paquetes netos sin crear huérfanos ni servicios fallidos.
+- Se retiran 141 archivos de caché de paquetes desinstalados y se recuperan 438.28 MiB.
+- Se conserva deliberadamente capacidad de VPN, NFS, recuperación Btrfs, comparación con Meld y diagnóstico con wev.
+- Se detecta que pacman no conocía la dependencia de Noctalia Greeter sobre wlroots, porque el compositor fue instalado manualmente con Meson.
+- Se reinstalan `wlroots0.20` y `libliftoff` antes del reinicio; `ldd` confirma cero bibliotecas ausentes.
+- Nest incorpora como requisito futuro la auditoría de ELF no empaquetados.
+
+Fuente técnica: `docs/modulos/limpieza-sistema.md`.
+
 ## 2026-07 — Noctalia Greeter
 
 - Se estudia su arquitectura antes de instalarlo.
