@@ -1,7 +1,7 @@
 # Índice de documentación
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-19
+**Última revisión:** 2026-07-20
 
 Este archivo es el punto de entrada canónico para comprender Cachy-caOS y Nest.
 
@@ -47,6 +47,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | `modulos/keybinds.md` | En desarrollo y funcional | Administración segura de atajos de Hyprland |
 | `modulos/visor-imagenes.md` | Vigente y validado | Selección de Loupe, integración con Nemo y estrategia MIME de Nest |
 | `modulos/krita-wayland.md` | Vigente y validado | Diagnóstico de XWayland, override local de Krita y patrón de compatibilidad Wayland para Nest |
+| `modulos/iconos-sistema.md` | Vigente y validado; automatización pendiente | Papirus, integración GTK/Qt, carpetas violetas y diseño del módulo de apariencia de Nest |
 
 ## Integraciones
 
@@ -89,6 +90,7 @@ Cada tema debe tener una sola fuente canónica:
 - Keybinds → `modulos/keybinds.md`;
 - visualizador de imágenes y asociaciones MIME relacionadas → `modulos/visor-imagenes.md`;
 - Krita, XWayland y override de lanzamiento → `modulos/krita-wayland.md`;
+- iconos del sistema, GTK/Qt y variantes de carpetas → `modulos/iconos-sistema.md`;
 - integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
 - temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.
