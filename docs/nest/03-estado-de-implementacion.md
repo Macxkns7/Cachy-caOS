@@ -105,6 +105,7 @@ El instalador futuro será responsable de transformar el árbol `src/` en las ru
 - Fish es el shell interactivo principal del sistema; los comandos mostrados al usuario deben ser compatibles con Fish o indicar explícitamente otro intérprete.
 - El tema de iconos es una capacidad transversal del Core y se implementará mediante adaptadores GTK, Qt, entorno y variantes de carpetas.
 - Los adaptadores deben modificar únicamente claves propias, preservar configuración ajena y ofrecer `detect`, `plan`, `apply`, `verify`, `repair` y `rollback`.
+- System Doctor deberá complementar pacman con auditoría ELF para detectar consumidores runtime instalados manualmente.
 
 ## Estado de Nest UI
 
@@ -148,6 +149,14 @@ La combinación fue comprobada en el sistema real: el icono aparece correctament
 - Falta una interfaz estable entre los módulos y el Core.
 - WebApps todavía usa una convención específica de Vivaldi para calcular la identidad Wayland.
 
+## Hallazgo de limpieza y dependencias runtime
+
+La limpieza validada retiró 92 paquetes netos y consolidó Nemo, mpv y greetd. Durante el proceso se comprobó que `pacman Required By` no cubre binarios instalados manualmente: `noctalia-greeter-compositor` dependía de `libwlroots-0.20.so`, aunque wlroots aparecía sin dependientes.
+
+`wlroots0.20` y `libliftoff` fueron restaurados antes del reinicio. Este caso define una nueva capacidad obligatoria para System Doctor: inventario de ELF no empaquetados, resolución de bibliotecas y verificación posterior a eliminaciones.
+
+Fuente: `docs/modulos/limpieza-sistema.md`.
+
 ## Problemas cerrados recientemente
 
 ### Identidad e iconos de WebApps en Noctalia
@@ -174,16 +183,17 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 
 ## Próximos hitos
 
-1. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
-2. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
-3. Cerrar la v0.4 de la TUI.
-4. Normalizar estructura y rutas.
-5. Definir contratos de módulos.
-6. Crear diagnóstico común.
-7. Diseñar instalador y actualizador para desplegar `src/`.
-8. Incorporar el módulo Keybinds al árbol de código fuente.
-9. Diseñar adaptadores de identidad para otros navegadores.
-10. Iniciar una interfaz gráfica sin acoplarla a la shell.
+1. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
+3. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
+3. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+4. Cerrar la v0.4 de la TUI.
+5. Normalizar estructura y rutas.
+6. Definir contratos de módulos.
+7. Crear diagnóstico común.
+8. Diseñar instalador y actualizador para desplegar `src/`.
+9. Incorporar el módulo Keybinds al árbol de código fuente.
+10. Diseñar adaptadores de identidad para otros navegadores.
+11. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
