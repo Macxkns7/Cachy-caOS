@@ -2,6 +2,8 @@
 
 Fecha de implementación: 2026-07-15
 
+Última revisión: 2026-07-20
+
 ## Resultado
 
 Noctalia Greeter reemplazó correctamente a SDDM como pantalla de inicio de sesión de Cachy-caOS. La sesión funcional seleccionada es `Hyprland`, y el greeter recuerda la última elección en `/var/lib/noctalia-greeter/greeter.toml`.
@@ -92,7 +94,7 @@ command = "/usr/bin/noctalia-greeter-session"
 user = "greeter"
 ```
 
-Antes de activar greetd se mantuvo SDDM funcional y se habilitó `getty@tty2.service` como vía de recuperación.
+Durante la migración se mantuvo SDDM funcional y se habilitó `getty@tty2.service` como vía de recuperación. Tras validar greetd en varios arranques, SDDM fue retirado el 2026-07-20. La TTY permanece como recuperación primaria.
 
 ## Polkit y sincronización visual
 
@@ -152,15 +154,26 @@ Noctalia Greeter probablemente debería ocultar sesiones cuyo `TryExec` no esté
 
 ## Recuperación
 
-En caso de fallo, desde TTY:
+SDDM ya no está instalado. La recuperación primaria es `getty@tty2.service`.
 
-```text
-systemctl disable greetd.service
-systemctl enable sddm.service
-reboot
+Desde TTY:
+
+```fish
+systemctl status greetd --no-pager
+journalctl -u greetd -b --no-pager
+ldd /usr/bin/noctalia-greeter-compositor | grep -E 'not found|wlroots'
 ```
 
-Nest deberá ofrecer esta recuperación sin exigir que el usuario recuerde los comandos.
+Si se necesita una alternativa temporal, SDDM puede reinstalarse explícitamente:
+
+```fish
+sudo pacman -S sddm
+sudo systemctl disable greetd.service
+sudo systemctl enable sddm.service
+sudo reboot
+```
+
+Nest deberá ofrecer diagnóstico y recuperación sin asumir que SDDM permanece preinstalado.
 
 ## Funciones futuras del módulo Nest
 
@@ -175,8 +188,21 @@ Nest deberá ofrecer esta recuperación sin exigir que el usuario recuerde los c
 - respetar `TryExec`;
 - seleccionar sesión predeterminada;
 - mostrar logs;
-- alternar entre greetd y SDDM;
+- alternar display manager solo después de comprobar que el alternativo está instalado;
+- inspeccionar dependencias ELF de binarios instalados manualmente;
 - generar una ruta de recuperación antes del cambio.
+
+## Dependencia runtime no registrada
+
+El 2026-07-20, `wlroots0.20` fue clasificado erróneamente como no requerido porque pacman mostraba `Required By: None`. El compositor fue instalado manualmente con Meson y no pertenece a ningún paquete, por lo que pacman no conoce su dependencia.
+
+La retirada produjo:
+
+```text
+libwlroots-0.20.so => not found
+```
+
+Se reinstalaron `wlroots0.20` y `libliftoff` antes del reinicio y `ldd` confirmó que no quedaban bibliotecas ausentes. Fuente completa: `docs/modulos/limpieza-sistema.md`.
 
 ## Lección principal
 
