@@ -184,7 +184,7 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 ## Próximos hitos
 
 1. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
-3. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
+2. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
 3. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
 4. Cerrar la v0.4 de la TUI.
 5. Normalizar estructura y rutas.
