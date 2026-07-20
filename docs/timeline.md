@@ -1,7 +1,7 @@
 # Timeline de Cachy-caOS
 
 **Estado:** Vigente — registro histórico  
-**Última revisión:** 2026-07-19
+**Última revisión:** 2026-07-20
 
 ## Propósito
 
@@ -94,6 +94,20 @@ Fuente técnica: `docs/modulos/visor-imagenes.md`.
 - Nest incorpora como patrón futuro la administración reversible de overrides XDG y compatibilidad Wayland por aplicación.
 
 Fuente técnica: `docs/modulos/krita-wayland.md`.
+
+## 2026-07 — Papirus e integración de iconos GTK/Qt
+
+- Se detecta que el sistema usaba Adwaita y no tenía Papirus instalado.
+- Se instala `papirus-icon-theme` desde los repositorios oficiales.
+- `gsettings` aplica Papirus-Dark para GTK, pero Noctalia y las aplicaciones Qt no cambian.
+- Se confirma que Noctalia v5 no almacena `icon_theme` y que la sesión Hyprland no tenía proveedor Qt.
+- Se instala `qt6ct`, se selecciona Papirus-Dark y se conserva el estilo Fusion.
+- Se exporta `QT_QPA_PLATFORMTHEME=qt6ct` antes de iniciar Noctalia.
+- Se inspecciona el instalador oficial de Papirus Folders y se instala v1.14.0 bajo `~/.local`.
+- Se aplica la variante `violet` y se valida visualmente con la paleta Lilac AMOLED.
+- Nest adopta el caso como base de un futuro módulo declarativo de apariencia con diagnóstico, reparación y rollback.
+
+Fuente técnica: `docs/modulos/iconos-sistema.md`.
 
 ## 2026-07 — Noctalia Greeter
 
