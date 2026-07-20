@@ -1,7 +1,7 @@
 # Estado de implementación de Nest
 
 **Estado:** En desarrollo  
-**Última revisión:** 2026-07-16
+**Última revisión:** 2026-07-20
 
 ## Propósito
 
@@ -103,6 +103,8 @@ El instalador futuro será responsable de transformar el árbol `src/` en las ru
 - Los recursos visuales propios deben vivir bajo el árbol administrado por Nest.
 - Las Desktop Entries generadas deben usar rutas absolutas para assets propios cuando la resolución por tema no sea fiable.
 - Fish es el shell interactivo principal del sistema; los comandos mostrados al usuario deben ser compatibles con Fish o indicar explícitamente otro intérprete.
+- El tema de iconos es una capacidad transversal del Core y se implementará mediante adaptadores GTK, Qt, entorno y variantes de carpetas.
+- Los adaptadores deben modificar únicamente claves propias, preservar configuración ajena y ofrecer `detect`, `plan`, `apply`, `verify`, `repair` y `rollback`.
 
 ## Estado de Nest UI
 
@@ -172,15 +174,16 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 
 ## Próximos hitos
 
-1. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
-2. Cerrar la v0.4 de la TUI.
-3. Normalizar estructura y rutas.
-4. Definir contratos de módulos.
-5. Crear diagnóstico común.
-6. Diseñar instalador y actualizador para desplegar `src/`.
-7. Incorporar el módulo Keybinds al árbol de código fuente.
-8. Diseñar adaptadores de identidad para otros navegadores.
-9. Iniciar una interfaz gráfica sin acoplarla a la shell.
+1. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
+2. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+3. Cerrar la v0.4 de la TUI.
+4. Normalizar estructura y rutas.
+5. Definir contratos de módulos.
+6. Crear diagnóstico común.
+7. Diseñar instalador y actualizador para desplegar `src/`.
+8. Incorporar el módulo Keybinds al árbol de código fuente.
+9. Diseñar adaptadores de identidad para otros navegadores.
+10. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
