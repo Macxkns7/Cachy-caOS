@@ -1,7 +1,7 @@
 # Estado de implementación de Nest
 
 **Estado:** En desarrollo  
-**Última revisión:** 2026-07-20
+**Última revisión:** 2026-07-21
 
 ## Propósito
 
@@ -48,6 +48,24 @@ Capacidades confirmadas:
 La prueba valida el futuro contrato Launcher Policy + Launcher Adapter. La política pertenece al Core; `/adv` es solamente su materialización para la shell actual.
 
 Fuente: `docs/modulos/organizacion-launcher.md`.
+
+### Perfil de audio y futuro Nest Audio
+
+Estado: **configuración funcional y validada; automatización pendiente**.
+
+Capacidades confirmadas en el sistema real:
+
+- PipeWire, WirePlumber y EasyEffects operativos;
+- presets v1 y v2 exportados y versionados;
+- perfil `NEST-Lenovo-13sG2-HK-v2` validado mediante pruebas A/B;
+- cadena ecualizador de 32 bandas → limitador LSP;
+- perfil explícitamente limitado a los parlantes integrados del Lenovo;
+- referencia neutral y rollback conservados;
+- repetición descontrolada de volumen resuelta en el módulo Keybinds.
+
+La prueba valida un futuro contrato Audio Profiles + EasyEffects Adapter. Nest deberá detectar dispositivos, desplegar presets, asociarlos de forma explícita y permitir bypass, verificación y rollback sin reimplementar procesamiento DSP.
+
+Fuente: `docs/modulos/audio-easyeffects.md`.
 
 ### WebApps v0.6 Beta
 
@@ -205,9 +223,10 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 
 ## Próximos hitos
 
-1. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
-2. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
-3. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
+1. Diseñar el manifiesto de perfiles por dispositivo y contrato EasyEffects Adapter para Nest Audio.
+2. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
+3. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
+4. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
 4. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
 5. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
 6. Cerrar la v0.4 de la TUI.
