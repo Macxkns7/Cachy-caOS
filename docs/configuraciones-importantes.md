@@ -1,7 +1,7 @@
 # Configuraciones importantes
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-19  
+**Última revisión:** 2026-07-21  
 **Histórico relacionado:** `docs/historico/era-omarchy/configuraciones-importantes-2026-06-20.md`
 
 ## Objetivo
@@ -240,10 +240,36 @@ Este punto está bajo investigación por el comportamiento del dock de Noctalia.
 
 ## Audio y energía
 
-- EasyEffects disponible para perfiles de audio.
-- La instalación actual utiliza el gestor de energía predeterminado de CachyOS.
-- La configuración anterior basada en `auto-cpufreq` pertenece a una instalación histórica y no debe aplicarse al sistema vigente.
-- El apartado de audio permanece en revisión operativa.
+Estado de audio comprobado:
+
+- PipeWire + WirePlumber;
+- EasyEffects 8.2.7;
+- `lsp-plugins-lv2` 1.2.33;
+- `calf` 0.90.9;
+- cadena: ecualizador de 32 bandas → limitador LSP;
+- perfil aprobado para parlantes integrados: `NEST-Lenovo-13sG2-HK-v2`;
+- referencia neutral amplificada: `NEST-Lenovo-13sG2-HK-v1`;
+- inicio automático de EasyEffects activado desde la aplicación;
+- frecuencia efectiva: 48 kHz.
+
+Limitador aprobado:
+
+```text
+entrada +3 dB
+threshold -1 dB
+ataque 5 ms
+liberación 5 ms
+lookahead 5 ms
+enlace estéreo 100 %
+```
+
+La v2 aplica únicamente correcciones suaves: atenuación progresiva bajo 100 Hz y hasta +0.5 dB en presencia. El perfil es específico del dispositivo y no debe aplicarse automáticamente a auriculares, Bluetooth o HDMI.
+
+Las teclas de volumen usan saltos de 5 % con `repeating = false`; esto evita ráfagas de 25 repeticiones por segundo sin perder funcionamiento con la sesión bloqueada.
+
+Fuente canónica: `docs/modulos/audio-easyeffects.md`.
+
+La instalación actual utiliza el gestor de energía predeterminado de CachyOS. La configuración anterior basada en `auto-cpufreq` pertenece a una instalación histórica y no debe aplicarse al sistema vigente.
 
 ## WebApps
 
