@@ -50,7 +50,7 @@ Las reglas completas están en `docs/convenciones-documentales.md`.
 | `modulos/iconos-sistema.md` | Vigente y validado; automatización pendiente | Papirus, integración GTK/Qt, carpetas violetas y diseño del módulo de apariencia de Nest |
 | `modulos/limpieza-sistema.md` | Vigente y validado | Auditoría, eliminación controlada, caché y dependencias ELF invisibles para pacman |
 | `modulos/organizacion-launcher.md` | Prototipo funcional y validado; automatización pendiente | Política General/Avanzado/Oculto, overrides XDG y proveedor `/adv` de Noctalia |
-| `modulos/audio-easyeffects.md` | Vigente y validado; módulo Nest pendiente | EasyEffects, presets por dispositivo, limitador, pruebas A/B y corrección de teclas de volumen |
+| `modulos/audio-easyeffects.md` | Vigente y validado; módulo Nest pendiente | EasyEffects, presets por dispositivo, limitador, pruebas A/B y corrección de teclas de volumen |\n| `modulos/fastfetch-personalizable.md` | Prototipo visual validado; módulo Nest pendiente | Fastfetch compacto, presets ASCII, edición personal de Manuel y diseño de Terminal Identity |
 
 ## Integraciones
 
@@ -96,7 +96,7 @@ Cada tema debe tener una sola fuente canónica:
 - iconos del sistema, GTK/Qt y variantes de carpetas → `modulos/iconos-sistema.md`;
 - limpieza, dependencias runtime y auditoría post-eliminación → `modulos/limpieza-sistema.md`;
 - organización del launcher, visibilidad XDG y capa avanzada → `modulos/organizacion-launcher.md`;
-- audio, EasyEffects, perfiles por dispositivo y control de volumen → `modulos/audio-easyeffects.md`;
+- audio, EasyEffects, perfiles por dispositivo y control de volumen → `modulos/audio-easyeffects.md`;\n- Fastfetch, identidad de terminal y presets ASCII → `modulos/fastfetch-personalizable.md`;
 - integración general de Noctalia v5 → `integraciones/noctalia-v5.md`;
 - temas y plantillas de Noctalia → `integraciones/noctalia-temas-y-plantillas.md`;
 - historia → `timeline.md`.
