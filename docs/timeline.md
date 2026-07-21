@@ -1,7 +1,7 @@
 # Timeline de Cachy-caOS
 
 **Estado:** Vigente — registro histórico  
-**Última revisión:** 2026-07-20
+**Última revisión:** 2026-07-21
 
 ## Propósito
 
@@ -158,3 +158,21 @@ Fuente técnica: `docs/modulos/organizacion-launcher.md`.
 ## Regla de mantenimiento
 
 Los eventos nuevos deben añadirse aquí solo cuando cambien el estado, la dirección o el conocimiento reproducible del proyecto. Los detalles diarios deben vivir en documentos técnicos o changelogs específicos.
+
+
+## 2026-07 — Audio EasyEffects por dispositivo y volumen estable
+
+- Se confirma una pila sana con PipeWire, WirePlumber y compatibilidad PulseAudio activada por socket.
+- Se instalan EasyEffects 8.2.7, LSP Plugins LV2 y Calf sin recurrir al metapaquete completo de LSP.
+- Se prueba una primera curva amplia de 32 bandas; mejora claridad, pero fuerza graves y pierde cuerpo al compensar entrada.
+- Se adopta un enfoque conservador que respeta la afinación existente de los parlantes Harman Kardon.
+- La v1 mantiene el ecualizador neutral y usa un limitador LSP con entrada +3 dB, threshold -1 dB y lookahead 5 ms.
+- La v2 atenúa progresivamente el grave inferior a 100 Hz y añade como máximo +0.5 dB de presencia.
+- Pruebas A/B con distintos estilos y una canción de graves exigentes validan mayor volumen, cuerpo conservado y menor distorsión.
+- Los presets `NEST-Lenovo-13sG2-HK-v1` y `v2` quedan versionados; la v2 se aprueba para los parlantes integrados.
+- Se establece que los perfiles de audio son específicos del dispositivo y no deben reutilizarse automáticamente en auriculares, Bluetooth o HDMI.
+- Se diagnostica un fallo histórico de volumen: bindings incrementales con repetición a 25 eventos por segundo.
+- `repeating = false` elimina las ráfagas y conserva saltos de 5 % por pulsación.
+- Nest adopta el caso como base de Audio Profiles + EasyEffects Adapter y amplía Keybinds para modelar `press/release/repeat`.
+
+Fuente técnica: `docs/modulos/audio-easyeffects.md`.
