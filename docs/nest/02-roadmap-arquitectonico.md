@@ -55,7 +55,7 @@ Objetivo: desacoplar la experiencia visual del Core.
 - mecanismos para detectar capacidades en vez de asumir herramientas concretas.
 - overrides XDG idempotentes, sincronización post-update y proveedores avanzados por shell.
 
-El módulo de iconos debe conservar la identidad visual aunque cambie la shell y debe editar solamente las claves que administra. Noctalia v5 es la shell actual, pero no debe convertirse en una dependencia crítica. Otras shells podrán integrarse mediante adaptadores cuando exista una necesidad real.
+El adaptador de identidad de terminal podrá administrar Fastfetch sin convertirlo en dependencia del Core: deberá preservar configuraciones existentes, validar anchos compactos y amplios, ofrecer arte ASCII local o importado como texto seguro y mantener presets personales separados de los predeterminados.\n\nEl módulo de iconos debe conservar la identidad visual aunque cambie la shell y debe editar solamente las claves que administra. Noctalia v5 es la shell actual, pero no debe convertirse en una dependencia crítica. Otras shells podrán integrarse mediante adaptadores cuando exista una necesidad real.
 
 La política del launcher debe permanecer en el Core y usar Desktop IDs estables. El adaptador XDG administrará visibilidad local; el adaptador Noctalia podrá materializar la capa avanzada mediante un proveedor `/adv`; otras shells deberán ofrecer una experiencia equivalente sin cambiar la clasificación declarada por el usuario.
 
