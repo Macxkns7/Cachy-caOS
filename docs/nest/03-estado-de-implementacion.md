@@ -227,16 +227,16 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 2. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
 3. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
 4. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
-4. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
-5. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
-6. Cerrar la v0.4 de la TUI.
-7. Normalizar estructura y rutas.
-8. Definir contratos de módulos.
-9. Crear diagnóstico común.
-10. Diseñar instalador y actualizador para desplegar `src/`.
-11. Incorporar el módulo Keybinds al árbol de código fuente.
-12. Diseñar adaptadores de identidad para otros navegadores.
-13. Iniciar una interfaz gráfica sin acoplarla a la shell.
+5. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
+6. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+7. Cerrar la v0.4 de la TUI.
+8. Normalizar estructura y rutas.
+9. Definir contratos de módulos.
+10. Crear diagnóstico común.
+11. Diseñar instalador y actualizador para desplegar `src/`.
+12. Incorporar el módulo Keybinds al árbol de código fuente.
+13. Diseñar adaptadores de identidad para otros navegadores.
+14. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
