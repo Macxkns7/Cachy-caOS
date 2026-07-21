@@ -176,3 +176,15 @@ Los eventos nuevos deben añadirse aquí solo cuando cambien el estado, la direc
 - Nest adopta el caso como base de Audio Profiles + EasyEffects Adapter y amplía Keybinds para modelar `press/release/repeat`.
 
 Fuente técnica: `docs/modulos/audio-easyeffects.md`.
+
+## 2026-07 — N.E.S.T. Kitty’s Edition para Fastfetch
+
+- Se identifica que el Fastfetch predeterminado de CachyOS era demasiado ancho para el uso habitual de Kitty en división vertical.
+- Se crea una composición compacta que conserva sistema, kernel, uptime, paquetes, shell, WM, terminal, CPU, GPU, memoria, disco y batería.
+- Se adoptan dos gatos ASCII apilados como representación de los gatos hermanos de Manuel sin aumentar el ancho lateral.
+- Se corrige la alineación mediante claves acolchadas y se valida el mismo preset en terminal completa y dividida.
+- La identidad final queda registrada como `Fastfetch : N.E.S.T. Kitty’s Edition`.
+- El preset y su arte ASCII se incorporan como ejemplo reproducible y preferencia particular, no como valor obligatorio.
+- N.E.S.T. reserva una futura capacidad Terminal Identity para presets incorporados, arte local, importación segura desde URL, previsualización, verificación y rollback.
+
+Fuente técnica: `docs/modulos/fastfetch-personalizable.md`.
