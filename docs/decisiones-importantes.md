@@ -2,7 +2,7 @@
 
 Fecha de creación: 2026-06-20
 
-Última actualización: 2026-07-20
+Última actualización: 2026-07-21
 
 ---
 
@@ -382,3 +382,44 @@ Motivos:
 
 * Documento creado.
 * Registradas las decisiones fundacionales de Cachy-caOS.
+
+
+---
+
+# Perfiles de audio específicos por dispositivo
+
+Decisión vigente:
+
+EasyEffects se adopta como backend externo para mejorar y administrar audio sin reimplementar procesamiento DSP en Nest. Los perfiles deben declarar explícitamente el dispositivo para el cual fueron creados y conservar una referencia neutral y rollback.
+
+Primer caso validado:
+
+* `NEST-Lenovo-13sG2-HK-v1`: ecualizador neutral + limitador.
+* `NEST-Lenovo-13sG2-HK-v2`: corrección suave de graves y presencia + mismo limitador.
+* Alcance: parlantes integrados Harman Kardon del Lenovo 13s G2.
+
+Motivos:
+
+* La afinación predeterminada del equipo ya era buena.
+* Una ecualización agresiva mejoró claridad, pero dañó graves y cuerpo.
+* La mayor mejora útil provino de ganancia controlada mediante limitador.
+* Auriculares, Bluetooth, HDMI y otros parlantes poseen respuestas diferentes.
+* Los perfiles deben poder compararse, verificarse, desactivarse y revertirse.
+
+Nest Audio administrará detección, dependencias, presets, asociación por dispositivo, prueba A/B y reparación. No inventará una curva universal ni establecerá silenciosamente un perfil de notebook para otras salidas.
+
+Fuente técnica: `docs/modulos/audio-easyeffects.md`.
+
+---
+
+# Repetición segura en acciones incrementales
+
+Decisión vigente:
+
+Los bindings incrementales como volumen y brillo no deben usar repetición automática por defecto. Cada perfil de Keybinds debe declarar si responde a `press`, `release` o `repeat`, junto con la tasa efectiva.
+
+Caso validado:
+
+Los bindings de volumen combinaban pasos de 5 %, `repeat_rate = 25` y `repeating = true`. Una liberación tardía podía completar la barra. Cambiar únicamente a `repeating = false` resolvió el problema y conservó `locked = true`.
+
+Fuente técnica: `docs/modulos/keybinds.md`.
