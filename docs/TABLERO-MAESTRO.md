@@ -55,7 +55,7 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Tema GTK3 integrado mediante `adw-gtk-theme` y plantillas de Noctalia.
 - ✅ Nemo completamente integrado visualmente con Noctalia.
 - ✅ Loupe integrado como visualizador de imágenes oficial.
-- ✅ Kitty ajustado a un tamaño de fuente cómodo mediante `font_size 9.5`.
+- ✅ Kitty ajustado a un tamaño de fuente cómodo mediante `font_size 9.5`.\n- ✅ Fastfetch compacto `N.E.S.T. Kitty’s Edition` validado en vista completa y dividida.\n- ✅ Preset personal de Manuel y gatos ASCII versionados como ejemplo reproducible.\n- ⏳ Diseñar Terminal Identity / Fastfetch Adapter con catálogo, importación segura, previsualización y rollback.
 - ✅ Krita corregido para usar Wayland nativo mediante override local de su Desktop Entry.
 - ✅ Papirus-Dark adoptado como tema de iconos para GTK y Qt.
 - ✅ Carpetas Papirus `violet` validadas con la paleta Lilac AMOLED.
@@ -233,7 +233,7 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 # Pendientes que no deben perderse
 
 - ⏳ Diseñar e implementar Nest Audio a partir del perfil EasyEffects ya validado.
-- 🟡 Continuar la afinación visual del sistema.
+- 🟡 Continuar la afinación visual del sistema.\n- ⏳ Diseñar el manifiesto declarativo y la previsualización del futuro módulo Terminal Identity.
 - 🟡 Continuar la base técnica de Nest.
 - ⏳ Crear módulo central de aplicaciones predeterminadas/MIME.
 - ⏳ Crear módulo de compatibilidad Wayland y overrides XDG.
@@ -277,4 +277,4 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - Iconos del sistema: `docs/modulos/iconos-sistema.md`.
 - Limpieza y auditoría ELF: `docs/modulos/limpieza-sistema.md`.
 - Organización del launcher: `docs/modulos/organizacion-launcher.md`.
-- Audio, EasyEffects y perfiles por dispositivo: `docs/modulos/audio-easyeffects.md`.
+- Audio, EasyEffects y perfiles por dispositivo: `docs/modulos/audio-easyeffects.md`.\n- Fastfetch e identidad de terminal: `docs/modulos/fastfetch-personalizable.md`.
