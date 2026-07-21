@@ -1,7 +1,7 @@
 # Cachy-caOS
 
 **Estado:** Vigente  
-**Última revisión:** 2026-07-16  
+**Última revisión:** 2026-07-21  
 **Histórico relacionado:** `docs/historico/era-omarchy/cachyos-manuel-2026-06-20.md`
 
 ## Descripción
@@ -45,6 +45,7 @@ El proyecto busca una experiencia modular, comprensible, reversible y documentad
 9. Adopción de Papirus-Dark y carpetas violetas con integración GTK/Qt documentada para Nest.
 10. Limpieza controlada del sistema y consolidación de Nemo, mpv y greetd.
 11. Incorporación de auditoría ELF al diseño de System Doctor.
+12. Validación de EasyEffects con perfiles de audio por dispositivo y corrección de repetición en teclas multimedia.
 
 ## Estado
 
