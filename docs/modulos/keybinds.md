@@ -1,7 +1,7 @@
 # Módulo Keybinds
 
 **Estado:** En desarrollo y funcional  
-**Última revisión:** 2026-07-17
+**Última revisión:** 2026-07-21
 
 ## Propósito
 
@@ -391,6 +391,41 @@ El archivo activo usado durante la prueba fue:
 ```
 
 Estos fragmentos documentan el resultado real, pero Nest deberá escribir en un archivo administrado propio cuando el módulo madure.
+
+## Repetición de teclas de volumen
+
+Caso validado en el Lenovo 13s G2:
+
+- una pulsación breve podía llevar ocasionalmente el volumen a mínimo o máximo;
+- el síntoma también había aparecido en Ubuntu y en la etapa Omarchy;
+- Hyprland tenía `repeat_rate = 25`, `repeat_delay = 600` y bindings de volumen con `repeating = true`;
+- cada repetición modificaba 5 %, por lo que una liberación tardía podía recorrer toda la barra en menos de un segundo.
+
+Configuración corregida:
+
+```lua
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = false })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = false })
+```
+
+Resultado comprobado:
+
+- una pulsación cambia exactamente 5 %;
+- una pulsación prolongada no inicia una ráfaga;
+- se conserva `locked = true` para permitir control con la sesión bloqueada;
+- no fue necesario modificar EasyEffects ni PipeWire.
+
+Regla para Nest:
+
+> La repetición no debe activarse por defecto en acciones incrementales peligrosas como volumen o brillo. El perfil debe declarar explícitamente si acepta `press`, `release` o `repeat` y mostrar la tasa efectiva antes de aplicar.
+
+Respaldo validado:
+
+```text
+~/.config/hypr/hyprland.lua.pre-volume-repeat-20260721.bak
+```
+
+La configuración de audio relacionada se documenta en `docs/modulos/audio-easyeffects.md`.
 
 ## Flujo de diagnóstico recomendado
 
