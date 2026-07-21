@@ -67,6 +67,23 @@ La prueba valida un futuro contrato Audio Profiles + EasyEffects Adapter. Nest d
 
 Fuente: `docs/modulos/audio-easyeffects.md`.
 
+### Fastfetch e identidad de terminal
+
+Estado: **prototipo visual funcional y validado; automatización pendiente**.
+
+Capacidades confirmadas en el sistema real:
+
+- configuración compacta válida en Kitty completa y dividida;
+- dos gatos ASCII apilados como preset personal de Manuel;
+- selección reducida de módulos útiles para diagnóstico cotidiano;
+- claves y valores alineados sin sacrificar el ancho compacto;
+- identidad `Fastfetch : N.E.S.T. Kitty’s Edition`;
+- preset y arte ASCII incorporados al repositorio como ejemplo reproducible.
+
+La prueba valida un futuro contrato Terminal Identity + Fastfetch Adapter. N.E.S.T. podrá previsualizar presets incorporados, seleccionar arte local, importar texto desde URL con validación y preservar o restaurar la configuración previa.
+
+Fuente: `docs/modulos/fastfetch-personalizable.md`.
+
 ### WebApps v0.6 Beta
 
 Estado: **funcional y validado en el sistema real**.
@@ -223,20 +240,20 @@ Esto eliminó el icono genérico tanto en el launcher como en el dock de Noctali
 
 ## Próximos hitos
 
-1. Diseñar el manifiesto de perfiles por dispositivo y contrato EasyEffects Adapter para Nest Audio.
-2. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
-3. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
-4. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
-5. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
-6. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
-7. Cerrar la v0.4 de la TUI.
-8. Normalizar estructura y rutas.
-9. Definir contratos de módulos.
-10. Crear diagnóstico común.
-11. Diseñar instalador y actualizador para desplegar `src/`.
-12. Incorporar el módulo Keybinds al árbol de código fuente.
-13. Diseñar adaptadores de identidad para otros navegadores.
-14. Iniciar una interfaz gráfica sin acoplarla a la shell.
+1. Diseñar el manifiesto de perfiles por dispositivo y contrato EasyEffects Adapter para Nest Audio.\n2. Diseñar el manifiesto de Terminal Identity y el adaptador de Fastfetch a partir de Kitty’s Edition.
+3. Diseñar el contrato de auditoría ELF y dependencias runtime para System Doctor.
+4. Diseñar el manifiesto y contrato de `Appearance / System Icons` a partir del procedimiento Papirus validado.
+5. Diseñar el manifiesto, reconciliador XDG y contrato Launcher Policy + Launcher Adapter.
+6. Incorporar el proveedor `nest/advanced` al árbol canónico después de estabilizar su instalación y rollback.
+7. Importar el PNG maestro de Nest en `src/assets/icons/nest-ui.png`.
+8. Cerrar la v0.4 de la TUI.
+9. Normalizar estructura y rutas.
+10. Definir contratos de módulos.
+11. Crear diagnóstico común.
+12. Diseñar instalador y actualizador para desplegar `src/`.
+13. Incorporar el módulo Keybinds al árbol de código fuente.
+14. Diseñar adaptadores de identidad para otros navegadores.
+15. Iniciar una interfaz gráfica sin acoplarla a la shell.
 
 ## Regla de actualización
 
