@@ -1,7 +1,7 @@
 # Tablero maestro de Cachy-caOS y Nest
 
 **Estado:** Vivo — fuente operativa principal  
-**Última revisión:** 2026-07-20
+**Última revisión:** 2026-07-21
 
 ## Propósito
 
@@ -28,7 +28,7 @@ No sustituye los documentos técnicos ni el roadmap arquitectónico. Su función
 
 ## Foco de la próxima sesión
 
-1. Revisar el apartado de audio y definir su estado real en la instalación actual.
+1. Diseñar el manifiesto de perfiles por dispositivo y el adaptador de EasyEffects para el futuro Nest Audio.
 2. Continuar afinando la experiencia visual, priorizando problemas reproducibles antes que personalización estética aislada.
 3. Actualizar la base técnica de Nest con los patrones ya validados: aplicaciones predeterminadas, overrides XDG y compatibilidad Wayland.
 
@@ -69,8 +69,11 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 
 - ✅ Base multimedia revisada.
 - ✅ Visualizador de imágenes elegido e integrado.
-- 🟡 Revisar el apartado de audio.
-- ⏳ Definir qué papel conservará EasyEffects y cómo administrará Nest sus perfiles.
+- ✅ EasyEffects instalado y validado sobre PipeWire.
+- ✅ Perfil específico `NEST-Lenovo-13sG2-HK-v2` aprobado mediante pruebas A/B.
+- ✅ Presets neutral y afinado exportados y versionados.
+- ✅ Teclas de volumen estabilizadas al desactivar repetición incremental.
+- ⏳ Diseñar Nest Audio con perfiles por dispositivo, prueba A/B, verificación y rollback.
 - ⏳ Revisar reproductores, edición multimedia y asociaciones predeterminadas restantes cuando exista una necesidad real.
 
 ## Archivos y aplicaciones predeterminadas
@@ -108,6 +111,8 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Patrón validado: organización General/Avanzado/Oculto independiente de la instalación de paquetes.
 - ✅ Proveedor local `nest/advanced` v0.2.0 validado con doce herramientas bajo `/adv`.
 - ✅ Siete entradas auxiliares ocultas mediante overrides XDG sin perder funcionalidad.
+- ✅ Patrón validado: perfiles de audio explícitos por dispositivo mediante EasyEffects Adapter.
+- ✅ Referencia neutral, perfil afinado y rollback de audio versionados.
 - 🟡 Continuar construyendo la base técnica de Nest.
 - ⏳ Cerrar la v0.4 de Nest UI.
 - ⏳ Normalizar rutas y estructura de instalación.
@@ -175,6 +180,18 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 
 # Actividades terminadas recientemente
 
+## 2026-07-21
+
+- ✅ Instalados EasyEffects, `lsp-plugins-lv2` y Calf sobre la pila PipeWire existente.
+- ✅ Confirmada la activación bajo demanda de PipeWire Pulse mediante socket.
+- ✅ Construida y descartada una primera curva agresiva después de pruebas auditivas.
+- ✅ Validada la v1 neutral con limitador LSP: entrada +3 dB, threshold -1 dB y lookahead 5 ms.
+- ✅ Afinada y aprobada `NEST-Lenovo-13sG2-HK-v2` para los parlantes Harman Kardon del Lenovo.
+- ✅ Versionados ambos presets y documentado su alcance específico por dispositivo.
+- ✅ Diagnosticada la subida/bajada completa ocasional del volumen como repetición de bindings a 25 eventos/s.
+- ✅ Cambiados los bindings de volumen a `repeating = false` y comprobado un salto estable de 5 % por pulsación.
+- ✅ Definido el alcance inicial del futuro módulo Nest Audio.
+
 ## 2026-07-20
 
 - ✅ Completada limpieza controlada: 92 paquetes netos retirados, cero huérfanos y cero servicios fallidos.
@@ -215,7 +232,7 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 
 # Pendientes que no deben perderse
 
-- 🟡 Revisar audio en la instalación vigente.
+- ⏳ Diseñar e implementar Nest Audio a partir del perfil EasyEffects ya validado.
 - 🟡 Continuar la afinación visual del sistema.
 - 🟡 Continuar la base técnica de Nest.
 - ⏳ Crear módulo central de aplicaciones predeterminadas/MIME.
@@ -260,3 +277,4 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - Iconos del sistema: `docs/modulos/iconos-sistema.md`.
 - Limpieza y auditoría ELF: `docs/modulos/limpieza-sistema.md`.
 - Organización del launcher: `docs/modulos/organizacion-launcher.md`.
+- Audio, EasyEffects y perfiles por dispositivo: `docs/modulos/audio-easyeffects.md`.
