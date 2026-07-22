@@ -19,6 +19,7 @@ REPORT_FILE="$REPORT_DIR/keybinds-report.txt"
 SOURCE_SCANNER="$LIB_DIR/source-scanner.py"
 BIND_RESOLVER="$LIB_DIR/bind-resolver.py"
 KEYBIND_GENERATOR="$LIB_DIR/keybind-generator.py"
+RUNTIME_SCANNER="$LIB_DIR/runtime-scanner.py"
 
 [[ -f "$NEST" ]] || {
   echo "Error: No se encontró Nest UI en $NEST" >&2
@@ -41,7 +42,7 @@ check_dependencies() {
   local missing=()
   local command_name
 
-  for command_name in gum jq hyprctl sha256sum python3; do
+  for command_name in gum hyprctl python3; do
     command -v "$command_name" >/dev/null 2>&1 ||
       missing+=("$command_name")
   done
@@ -113,166 +114,19 @@ rollback_changes() {
   pause_screen
 }
 
-modmask_to_text() {
-  local mask="${1:-0}"
-  local parts=()
-
-  ((mask & 64)) && parts+=("SUPER")
-  ((mask & 4))  && parts+=("CTRL")
-  ((mask & 8))  && parts+=("ALT")
-  ((mask & 1))  && parts+=("SHIFT")
-
-  if ((${#parts[@]} == 0)); then
-    printf 'SIN MODIFICADOR'
-  else
-    local joined
-    printf -v joined '%s + ' "${parts[@]}"
-    printf '%s' "${joined% + }"
-  fi
-}
-
-format_key() {
-  case "${1:-}" in
-    XF86AudioRaiseVolume)  printf 'SUBIR VOLUMEN' ;;
-    XF86AudioLowerVolume)  printf 'BAJAR VOLUMEN' ;;
-    XF86AudioMute)         printf 'SILENCIAR AUDIO' ;;
-    XF86AudioMicMute)      printf 'SILENCIAR MICRÓFONO' ;;
-    XF86MonBrightnessUp)   printf 'SUBIR BRILLO' ;;
-    XF86MonBrightnessDown) printf 'BAJAR BRILLO' ;;
-    XF86AudioNext)         printf 'SIGUIENTE PISTA' ;;
-    XF86AudioPrev)         printf 'PISTA ANTERIOR' ;;
-    XF86AudioPlay)         printf 'REPRODUCIR' ;;
-    XF86AudioPause)        printf 'PAUSA' ;;
-    mouse_down)            printf 'RUEDA ABAJO' ;;
-    mouse_up)              printf 'RUEDA ARRIBA' ;;
-    mouse:272)             printf 'CLIC IZQUIERDO' ;;
-    mouse:273)             printf 'CLIC DERECHO' ;;
-    mouse:274)             printf 'CLIC CENTRAL' ;;
-    "")                    printf 'TECLA DESCONOCIDA' ;;
-    *)                     printf '%s' "$1" ;;
-  esac
-}
-
-format_flags() {
-  local locked="${1:-false}"
-  local mouse="${2:-false}"
-  local release="${3:-false}"
-  local repeat="${4:-false}"
-  local flags=()
-
-  [[ "$locked" == "true" ]]  && flags+=("locked")
-  [[ "$mouse" == "true" ]]   && flags+=("mouse")
-  [[ "$release" == "true" ]] && flags+=("release")
-  [[ "$repeat" == "true" ]]  && flags+=("repeat")
-
-  if ((${#flags[@]} == 0)); then
-    printf '-'
-  else
-    local joined
-    printf -v joined '%s,' "${flags[@]}"
-    printf '%s' "${joined%,}"
-  fi
-}
-
-fallback_action() {
-  local dispatcher="${1:-}"
-  local argument="${2:-}"
-
-  if [[ -n "$dispatcher" && "$dispatcher" != "__lua" ]]; then
-    if [[ -n "$argument" ]]; then
-      printf '%s · %s' "$dispatcher" "$argument"
-    else
-      printf '%s' "$dispatcher"
-    fi
-  elif [[ "$dispatcher" == "__lua" ]]; then
-    printf 'Acción Lua interna #%s' "${argument:-?}"
-  else
-    printf 'Acción desconocida'
-  fi
-}
-
 refresh_runtime() {
-  local json
-  local modmask key keycode description dispatcher argument
-  local submap locked mouse release repeat
-  local modifiers formatted_key combo action flags identity
-
   mkdir -p "$CACHE_DIR" "$REPORT_DIR" "$BACKUP_DIR"
 
-  json="$(hyprctl binds -j 2>/dev/null)" ||
+  "$RUNTIME_SCANNER" --output "$RUNTIME_FILE" ||
     die "No pude consultar los atajos activos de Hyprland."
 
-  jq -e 'type == "array"' >/dev/null <<<"$json" ||
-    die "Hyprland devolvió una respuesta inesperada."
+  "$SOURCE_SCANNER" --output "$SOURCE_FILE"
 
-  : > "$RUNTIME_FILE"
-
-  while IFS=$'\x1f' read -r \
-    modmask key keycode description dispatcher argument \
-    submap locked mouse release repeat; do
-
-    if [[ -z "$key" && "$keycode" != "0" ]]; then
-      key="code:$keycode"
-    fi
-
-    modifiers="$(modmask_to_text "$modmask")"
-    formatted_key="$(format_key "$key")"
-
-    if [[ "$modmask" == "0" ]]; then
-      combo="$formatted_key"
-    else
-      combo="$modifiers + $formatted_key"
-    fi
-
-    if [[ -n "$description" ]]; then
-      action="$description"
-    else
-      action="$(fallback_action "$dispatcher" "$argument")"
-    fi
-
-    flags="$(format_flags "$locked" "$mouse" "$release" "$repeat")"
-
-    identity="$(
-      printf '%s' \
-        "${submap}|${modmask}|${key}|${flags}|${dispatcher}" |
-        sha256sum |
-        cut -d' ' -f1
-    )"
-
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-      "$identity" \
-      "$combo" \
-      "$action" \
-      "$description" \
-      "$dispatcher" \
-      "$argument" \
-      "${submap:-global}" \
-      "$flags" >> "$RUNTIME_FILE"
-
-  done < <(
-    jq -r '
-      .[] |
-      [
-        (.modmask // 0),
-        (.key // ""),
-        (.keycode // 0),
-        (.description // ""),
-        (.dispatcher // ""),
-        (.arg // ""),
-        (.submap // "global"),
-        (.locked // false),
-        (.mouse // false),
-        (.release // false),
-        (.repeat // false)
-      ] |
-      map(tostring) |
-      join("\u001f")
-    ' <<<"$json"
-  )
-
-  "$SOURCE_SCANNER"     --output "$SOURCE_FILE"
-
-  "$BIND_RESOLVER"     --runtime "$RUNTIME_FILE"     --source "$SOURCE_FILE"     --output "$ENRICHED_FILE"     >/dev/null
+  "$BIND_RESOLVER" \
+    --runtime "$RUNTIME_FILE" \
+    --source "$SOURCE_FILE" \
+    --output "$ENRICHED_FILE" \
+    >/dev/null
 }
 
 total_count() {
