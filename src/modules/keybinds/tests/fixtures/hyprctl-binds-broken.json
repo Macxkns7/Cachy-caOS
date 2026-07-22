@@ -1,0 +1,13 @@
+[
+{
+    "locked": false,
+    "modmask": false,
+    "submap": "64",
+    "key": "false",
+    "keycode": Q,
+    "description": "false",
+    "allow_input_capture": ,
+    "dispatcher": "__lua",
+    "arg": "5"
+}
+]
