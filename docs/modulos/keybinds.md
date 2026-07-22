@@ -546,6 +546,7 @@ La primera implementación completa del ciclo de vida quedó publicada el 22 de 
 Capacidades comprobadas:
 
 - scanner recursivo de configuración Lua y módulos cargados mediante `require`;
+- fallback automático a `hyprctl binds` cuando Hyprland 0.56 entrega JSON inválido;
 - correlación entre los bindings runtime y su fuente;
 - manifiesto TOML separado de la configuración personal;
 - archivo administrado definitivo en `~/.config/hypr/cachycaos/keybinds.lua`;
