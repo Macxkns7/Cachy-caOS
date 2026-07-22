@@ -32,7 +32,7 @@ require("cachycaos.keybinds")
 Desde este directorio:
 
 ```bash
-./install.sh
+bash install.sh
 ```
 
 ## Uso
@@ -73,7 +73,7 @@ activada por omisión, especialmente en volumen y brillo.
 ## Pruebas
 
 ```bash
-./tests/run.sh
+bash tests/run.sh
 ```
 
 La prueba incluye un rechazo simulado de Hyprland y comprueba que el archivo
