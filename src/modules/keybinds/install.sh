@@ -13,6 +13,8 @@ for directory in build data lib; do
   cp -a "$SOURCE/$directory/." "$MODULE/$directory/"
 done
 
+chmod 755 "$MODULE"/lib/*.py
+
 install -m 755 "$SOURCE/app.sh" "$MODULE/app.sh"
 install -m 755 \
   "$SOURCE/bin/cachycaos-keybinds" \
