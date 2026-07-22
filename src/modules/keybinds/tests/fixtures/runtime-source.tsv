@@ -1,0 +1,2 @@
+runtime-q	SUPER + Q	Ejecutar: kitty		__lua	5	global	-
+runtime-w	SUPER + W	Cerrar ventana activa	Cerrar ventana activa	__lua	7	global	-

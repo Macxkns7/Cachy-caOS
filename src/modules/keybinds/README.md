@@ -2,7 +2,7 @@
 
 Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 
-## Alcance de v0.2
+## Alcance de v0.3
 
 - inventaría los bindings activos y sigue módulos Lua cargados con `require`;
 - tolera el JSON inválido de Hyprland 0.56 mediante fallback automático a
@@ -14,7 +14,14 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 - respalda el archivo administrado;
 - recarga y valida Hyprland;
 - restaura automáticamente el estado previo si la validación falla;
-- permite verificación y rollback explícitos.
+- permite verificación y rollback explícitos;
+- muestra el archivo fuente real de cada binding, incluido el módulo
+  administrado;
+- crea y edita bindings como registros de un manifiesto TOML;
+- importa bindings personales como borradores inicialmente deshabilitados;
+- bloquea la habilitación y la aplicación si la combinación original continúa
+  activa fuera del archivo administrado;
+- conserva un respaldo independiente antes de cada cambio del manifiesto.
 
 N.E.S.T. sólo administra:
 
@@ -67,7 +74,24 @@ Cada `[[bind]]` admite:
 | `locked` | permite uso con la sesión bloqueada |
 | `mouse` | marca bindings de mouse |
 | `action` | acción lógica soportada o `exec` |
-| `argument` | comando obligatorio para `exec` |
+| `argument` | valor obligatorio para acciones parametrizadas |
+
+Las acciones administradas en v0.3 son:
+
+```text
+exec
+layout
+focus
+workspace.focus
+workspace.special
+window.close
+window.float.toggle
+window.pseudo
+window.fullscreen
+window.drag
+window.resize
+window.move
+```
 
 `press` genera explícitamente `repeating = false`. La repetición nunca queda
 activada por omisión, especialmente en volumen y brillo.
@@ -81,9 +105,28 @@ bash tests/run.sh
 La prueba incluye un rechazo simulado de Hyprland y comprueba que el archivo
 anterior se restaura byte por byte. También reproduce la salida JSON corrupta
 observada en Hyprland 0.56 y valida la recuperación desde el formato textual.
+Además cubre atribución por archivo fuente, importación deshabilitada, bloqueo
+de colisiones externas, edición del manifiesto y generación de acciones
+parametrizadas.
 
-## Pendiente
+## Flujo seguro de migración
 
-La edición visual e importación guiada de bindings personales llegará en una
-fase posterior. v0.2 hace seguro y operativo el ciclo de vida del archivo
-administrado sin migrar silenciosamente la configuración del usuario.
+1. `Actualizar` reconstruye el inventario runtime y fuente.
+2. `Buscar atajos` permite inspeccionar e importar un binding externo.
+3. La importación entra como borrador deshabilitado y conserva ruta, línea e
+   identidad de origen.
+4. `Atajos administrados` permite editarlo y revisar su estado.
+5. Para migrarlo, el usuario retira de forma explícita la definición original.
+6. N.E.S.T. sólo permite habilitarlo cuando ya no existe la colisión externa.
+7. `Planificar cambios` enseña el diff y `Aplicar cambios` pide confirmación,
+   respalda, recarga y valida Hyprland.
+
+N.E.S.T. nunca comenta, elimina ni reescribe silenciosamente el archivo Lua
+personal del usuario.
+
+## Siguiente fase
+
+- asistente guiado para retirar una definición externa con diff separado;
+- catálogo de capacidades y proveedores;
+- captura de teclas mediante `wev`;
+- exportación e importación de perfiles completos.

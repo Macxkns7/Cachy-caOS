@@ -34,6 +34,16 @@ ACTION_MAP = {
     "window.fullscreen": (
         'hl.dsp.window.fullscreen({ action = "toggle" })'
     ),
+    "window.drag": "hl.dsp.window.drag()",
+    "window.resize": "hl.dsp.window.resize()",
+}
+
+ARGUMENT_ACTIONS = {
+    "layout",
+    "focus",
+    "workspace.focus",
+    "workspace.special",
+    "window.move",
 }
 
 
@@ -145,17 +155,21 @@ def parse_bind(
             f"bind #{bind_number}: tecla no válida '{key}'."
         )
 
-    if action != "exec" and action not in ACTION_MAP:
+    if (
+        action != "exec"
+        and action not in ACTION_MAP
+        and action not in ARGUMENT_ACTIONS
+    ):
         fail(
             f"bind #{bind_number}: acción desconocida '{action}'."
         )
 
     argument = record.get("argument")
 
-    if action == "exec":
+    if action == "exec" or action in ARGUMENT_ACTIONS:
         if not isinstance(argument, str) or not argument.strip():
             fail(
-                f"bind #{bind_number}: la acción 'exec' "
+                f"bind #{bind_number}: la acción '{action}' "
                 "requiere 'argument'."
             )
 
@@ -235,7 +249,24 @@ def render_dispatcher(bind: Bind) -> str:
         assert bind.argument is not None
         return f"hl.dsp.exec_cmd({lua_quote(bind.argument)})"
 
-    return ACTION_MAP[bind.action]
+    if bind.action in ACTION_MAP:
+        return ACTION_MAP[bind.action]
+
+    assert bind.argument is not None
+    argument = lua_quote(bind.argument)
+
+    if bind.action == "layout":
+        return f"hl.dsp.layout({argument})"
+    if bind.action == "focus":
+        return f"hl.dsp.focus({{ direction = {argument} }})"
+    if bind.action == "workspace.focus":
+        return f"hl.dsp.focus({{ workspace = {argument} }})"
+    if bind.action == "workspace.special":
+        return f"hl.dsp.workspace.toggle_special({argument})"
+    if bind.action == "window.move":
+        return f"hl.dsp.window.move({{ workspace = {argument} }})"
+
+    raise AssertionError(f"Acción sin renderer: {bind.action}")
 
 
 def render_lua(binds: list[Bind]) -> str:

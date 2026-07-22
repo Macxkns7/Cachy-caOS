@@ -9,6 +9,8 @@ LIB_DIR="$MODULE_DIR/lib"
 CACHE_DIR="$MODULE_DIR/cache"
 REPORT_DIR="$MODULE_DIR/reports"
 BACKUP_DIR="$MODULE_DIR/backups"
+DATA_FILE="$MODULE_DIR/data/binds.toml"
+MANAGED_TARGET="$HOME/.config/hypr/cachycaos/keybinds.lua"
 
 RUNTIME_FILE="$CACHE_DIR/runtime.tsv"
 SOURCE_FILE="$CACHE_DIR/source.tsv"
@@ -20,6 +22,7 @@ SOURCE_SCANNER="$LIB_DIR/source-scanner.py"
 BIND_RESOLVER="$LIB_DIR/bind-resolver.py"
 KEYBIND_GENERATOR="$LIB_DIR/keybind-generator.py"
 RUNTIME_SCANNER="$LIB_DIR/runtime-scanner.py"
+MANIFEST_EDITOR="$LIB_DIR/manifest-editor.py"
 
 [[ -f "$NEST" ]] || {
   echo "Error: No se encontró Nest UI en $NEST" >&2
@@ -49,10 +52,22 @@ check_dependencies() {
 
   ((${#missing[@]} == 0)) ||
     die "Faltan dependencias: ${missing[*]}"
+
+  [[ -x "$MANIFEST_EDITOR" ]] ||
+    die "No se encontró el editor de manifiesto: $MANIFEST_EDITOR"
 }
 
 run_generator() {
   python3 "$KEYBIND_GENERATOR" "$@"
+}
+
+run_editor() {
+  python3 "$MANIFEST_EDITOR" \
+    --data "$DATA_FILE" \
+    --backups "$BACKUP_DIR" \
+    --inventory "$ENRICHED_FILE" \
+    --managed-target "$MANAGED_TARGET" \
+    "$@"
 }
 
 plan_changes() {
@@ -77,6 +92,10 @@ apply_changes() {
 
   if ((conflicts > 0)); then
     die "Hay $conflicts combinaciones duplicadas. Revísalas antes de aplicar."
+  fi
+
+  if ! run_editor check-conflicts; then
+    die "El manifiesto se solapa con atajos externos. Corrige el conflicto antes de aplicar."
   fi
 
   nest_clear
@@ -176,7 +195,7 @@ render_records() {
 
 show_summary() {
   nest_clear
-  nest_header "Atajos de teclado" "v0.2 · Gestión segura"
+  nest_header "Atajos de teclado" "v0.3 · Editor seguro"
 
   gum style \
     --border rounded \
@@ -243,6 +262,32 @@ show_details_by_display() {
     "Línea fuente: ${source_line:-no disponible}" \
     "Flags: $flags" \
     "ID: ${identity:0:16}…"
+
+  if [[ "$origin" == "$MANAGED_TARGET" ]]; then
+    pause_screen
+    return 0
+  fi
+
+  local choice identifier output
+  choice="$(nest_menu "Importar como borrador" "Volver")" || true
+
+  [[ "$choice" == "Importar como borrador" ]] || return 0
+
+  identifier="$(
+    gum input \
+      --placeholder "ID único: por ejemplo, app.terminal"
+  )" || true
+
+  [[ -n "$identifier" ]] || return 0
+
+  if output="$(run_editor import --identity "$identity" --id "$identifier" 2>&1)"; then
+    nest_success "Atajo importado como borrador deshabilitado."
+    printf '%s\n' "$output"
+    echo
+    echo "Puedes revisarlo en 'Atajos administrados'."
+  else
+    nest_warning "$output"
+  fi
 
   pause_screen
 }
@@ -313,9 +358,311 @@ show_duplicates() {
   pause_screen
 }
 
+render_managed_records() {
+  run_editor list |
+    awk -F '\t' '
+      {
+        state = $2 == "true" ? "activo" : "borrador"
+        printf "%-24s · %-9s · %s → %s\n", $1, state, $3, $5
+      }
+    '
+}
+
+choose_action() {
+  local current="${1:-}"
+  local actions=(
+    exec
+    window.close
+    window.float.toggle
+    window.pseudo
+    window.fullscreen
+    window.drag
+    window.resize
+    layout
+    focus
+    workspace.focus
+    workspace.special
+    window.move
+  )
+  local ordered=()
+  local action
+
+  [[ -z "$current" ]] || ordered+=("$current")
+
+  for action in "${actions[@]}"; do
+    [[ "$action" == "$current" ]] || ordered+=("$action")
+  done
+
+  gum choose "${ordered[@]}" --header "Acción administrada"
+}
+
+action_needs_argument() {
+  case "$1" in
+    exec|layout|focus|workspace.focus|workspace.special|window.move)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+add_managed_draft() {
+  local identifier combo category description action argument output
+
+  nest_clear
+  nest_header "Atajos de teclado" "Nuevo borrador"
+
+  identifier="$(gum input --placeholder "ID: app.terminal")" || true
+  [[ -n "$identifier" ]] || return 0
+
+  combo="$(gum input --placeholder "Combinación: SUPER + Return")" || true
+  [[ -n "$combo" ]] || return 0
+
+  category="$(gum input --value "General" --placeholder "Categoría")" || true
+  [[ -n "$category" ]] || return 0
+
+  description="$(gum input --placeholder "Descripción visible")" || true
+  [[ -n "$description" ]] || return 0
+
+  action="$(choose_action)" || true
+  [[ -n "$action" ]] || return 0
+
+  argument=""
+  if action_needs_argument "$action"; then
+    argument="$(gum input --placeholder "Argumento o comando")" || true
+    [[ -n "$argument" ]] || return 0
+  fi
+
+  local arguments=(
+    add
+    --id "$identifier"
+    --combo "$combo"
+    --category "$category"
+    --description "$description"
+    --action "$action"
+  )
+  [[ -z "$argument" ]] || arguments+=(--argument "$argument")
+
+  if output="$(run_editor "${arguments[@]}" 2>&1)"; then
+    nest_success "Borrador creado y deshabilitado por seguridad."
+    printf '%s\n' "$output"
+  else
+    nest_warning "$output"
+  fi
+
+  pause_screen
+}
+
+edit_managed_record() {
+  local identifier="$1"
+  local row enabled combo category description action argument event
+  local locked mouse imported_from imported_line imported_identity
+  local new_combo new_category new_description new_action new_argument output
+
+  row="$(run_editor list | awk -F '\t' -v id="$identifier" '$1 == id { print; exit }')"
+  [[ -n "$row" ]] || return 0
+
+  IFS=$'\t' read -r \
+    identifier enabled combo category description action argument event \
+    locked mouse imported_from imported_line imported_identity <<<"$row"
+  [[ "$argument" == "-" ]] && argument=""
+
+  new_combo="$(gum input --value "$combo" --placeholder "Combinación")" || true
+  [[ -n "$new_combo" ]] || return 0
+
+  new_category="$(gum input --value "$category" --placeholder "Categoría")" || true
+  [[ -n "$new_category" ]] || return 0
+
+  new_description="$(gum input --value "$description" --placeholder "Descripción")" || true
+  [[ -n "$new_description" ]] || return 0
+
+  new_action="$(choose_action "$action")" || true
+  [[ -n "$new_action" ]] || return 0
+
+  new_argument=""
+  if action_needs_argument "$new_action"; then
+    new_argument="$(
+      gum input --value "$argument" --placeholder "Argumento o comando"
+    )" || true
+    [[ -n "$new_argument" ]] || return 0
+  fi
+
+  local arguments=(
+    set
+    --id "$identifier"
+    --combo "$new_combo"
+    --category "$new_category"
+    --description "$new_description"
+    --action "$new_action"
+  )
+  [[ -z "$new_argument" ]] || arguments+=(--argument "$new_argument")
+
+  if output="$(run_editor "${arguments[@]}" 2>&1)"; then
+    nest_success "Borrador actualizado."
+    printf '%s\n' "$output"
+  else
+    nest_warning "$output"
+  fi
+
+  pause_screen
+}
+
+toggle_managed_boolean() {
+  local identifier="$1"
+  local field="$2"
+  local current="$3"
+  local next="true"
+  local output
+
+  [[ "$current" == "true" ]] && next="false"
+
+  if output="$(run_editor set --id "$identifier" --"$field" "$next" 2>&1)"; then
+    nest_success "Propiedad '$field' actualizada a $next."
+    printf '%s\n' "$output"
+  else
+    nest_warning "$output"
+  fi
+
+  pause_screen
+}
+
+show_managed_record() {
+  local identifier="$1"
+  local row enabled combo category description action argument event
+  local locked mouse imported_from imported_line imported_identity
+  local state source choice output next_command
+
+  while true; do
+    row="$(run_editor list | awk -F '\t' -v id="$identifier" '$1 == id { print; exit }')"
+    [[ -n "$row" ]] || return 0
+
+    IFS=$'\t' read -r \
+      identifier enabled combo category description action argument event \
+      locked mouse imported_from imported_line imported_identity <<<"$row"
+    [[ "$argument" == "-" ]] && argument=""
+
+    state="Borrador deshabilitado"
+    [[ "$enabled" == "true" ]] && state="Habilitado en el manifiesto"
+    source="$imported_from"
+    [[ "$source" == "managed" ]] && source="Creado en N.E.S.T."
+
+    nest_clear
+    nest_header "Atajos de teclado" "Administrado · $identifier"
+
+    gum style \
+      --border rounded \
+      --padding "1 2" \
+      "$combo" \
+      "" \
+      "$description" \
+      "" \
+      "Estado: $state" \
+      "Categoría: $category" \
+      "Acción: $action" \
+      "Argumento: ${argument:-ninguno}" \
+      "Evento: $event" \
+      "Bloqueo: $locked" \
+      "Ratón: $mouse" \
+      "Origen: $source"
+
+    next_command="Habilitar"
+    [[ "$enabled" == "true" ]] && next_command="Deshabilitar"
+
+    choice="$(
+      nest_menu \
+        "Editar datos" \
+        "Cambiar evento" \
+        "Alternar uso con sesión bloqueada" \
+        "Alternar binding de ratón" \
+        "$next_command" \
+        "Eliminar del manifiesto" \
+        "Volver"
+    )" || true
+
+    case "$choice" in
+      "Editar datos")
+        edit_managed_record "$identifier"
+        ;;
+      "Cambiar evento")
+        local new_event
+        new_event="$(gum choose "$event" press release repeat --header "Evento")" || true
+        [[ -n "$new_event" ]] || continue
+        run_editor set --id "$identifier" --event "$new_event"
+        ;;
+      "Alternar uso con sesión bloqueada")
+        toggle_managed_boolean "$identifier" locked "$locked"
+        ;;
+      "Alternar binding de ratón")
+        toggle_managed_boolean "$identifier" mouse "$mouse"
+        ;;
+      "Habilitar"|"Deshabilitar")
+        next_command="enable"
+        [[ "$choice" == "Deshabilitar" ]] && next_command="disable"
+        if output="$(run_editor "$next_command" --id "$identifier" 2>&1)"; then
+          nest_success "$choice completado en el manifiesto."
+          printf '%s\n' "$output"
+          echo
+          echo "Usa 'Planificar cambios' antes de aplicar."
+        else
+          nest_warning "$output"
+        fi
+        pause_screen
+        ;;
+      "Eliminar del manifiesto")
+        gum confirm \
+          "¿Eliminar '$identifier'? El respaldo permitirá recuperarlo." || continue
+        if output="$(run_editor remove --id "$identifier" 2>&1)"; then
+          nest_success "Registro eliminado del manifiesto."
+          printf '%s\n' "$output"
+        else
+          nest_warning "$output"
+        fi
+        pause_screen
+        return 0
+        ;;
+      "Volver"|"")
+        return 0
+        ;;
+    esac
+  done
+}
+
+show_managed() {
+  local choice selected identifier
+
+  while true; do
+    nest_clear
+    nest_header "Atajos de teclado" "Administrados y borradores"
+
+    choice="$(nest_menu "Nuevo borrador" "Abrir registro" "Volver")" || true
+
+    case "$choice" in
+      "Nuevo borrador")
+        add_managed_draft
+        ;;
+      "Abrir registro")
+        selected="$(
+          render_managed_records |
+            gum filter \
+              --placeholder "Buscar ID, combinación o descripción..." \
+              --header "Manifiesto administrado"
+        )" || true
+        [[ -n "$selected" ]] || continue
+        identifier="${selected%% · *}"
+        identifier="$(sed 's/[[:space:]]*$//' <<<"$identifier")"
+        show_managed_record "$identifier"
+        ;;
+      "Volver"|"")
+        return 0
+        ;;
+    esac
+  done
+}
+
 export_report() {
   {
-    echo "Cachy-caOS · Atajos de teclado v0.2"
+    echo "Cachy-caOS · Atajos de teclado v0.3"
     echo "Generado: $(date '+%Y-%m-%d %H:%M:%S')"
     echo
     echo "Atajos activos: $(total_count)"
@@ -342,12 +689,13 @@ main_menu() {
 
   while true; do
     nest_clear
-    nest_header "Cachy-caOS" "Atajos de teclado · v0.2"
+    nest_header "Cachy-caOS" "Atajos de teclado · v0.3"
 
     choice="$(
       nest_menu \
         "Resumen" \
         "Buscar atajos" \
+        "Atajos administrados" \
         "Sin descripción" \
         "Conflictos" \
         "Planificar cambios" \
@@ -365,6 +713,9 @@ main_menu() {
         ;;
       "Buscar atajos")
         show_all
+        ;;
+      "Atajos administrados")
+        show_managed
         ;;
       "Sin descripción")
         show_without_description
@@ -439,6 +790,10 @@ case "${1:-}" in
 
     if (("$(duplicate_count)" > 0)); then
       die "Existen combinaciones duplicadas; aplicación bloqueada."
+    fi
+
+    if ! run_editor check-conflicts; then
+      die "El manifiesto se solapa con atajos externos; aplicación bloqueada."
     fi
 
     run_generator --install --reload

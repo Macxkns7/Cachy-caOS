@@ -36,6 +36,7 @@ class SourceBinding:
     description: str
     action_type: str
     argument: str
+    source_path: str
     source_line: str
 
 
@@ -219,9 +220,9 @@ def load_source(path: Path) -> list[SourceBinding]:
     bindings: list[SourceBinding] = []
 
     for number, row in enumerate(rows, start=1):
-        if len(row) != 6:
+        if len(row) != 7:
             raise ValueError(
-                f"{path}:{number}: se esperaban 6 columnas, "
+                f"{path}:{number}: se esperaban 7 columnas, "
                 f"pero llegaron {len(row)}."
             )
 
@@ -293,7 +294,7 @@ def resolve(
                 ),
                 action_type=source.action_type,
                 argument=source.argument,
-                origin="hyprland.lua",
+                origin=source.source_path,
                 source_line=source.source_line,
                 dispatcher=runtime.dispatcher,
                 runtime_argument=runtime.runtime_argument,

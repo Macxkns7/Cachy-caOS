@@ -1,6 +1,6 @@
 # Módulo Keybinds
 
-**Estado:** v0.2 operativa; edición visual pendiente  
+**Estado:** v0.3 operativa; editor e importación segura disponibles  
 **Última revisión:** 2026-07-22
 
 ## Propósito
@@ -95,12 +95,16 @@ objetivo → archivo → ubicación exacta → bloque → recarga → prueba
 
 Nest no debe apropiarse de todo `hyprland.conf` ni del archivo Lua principal.
 
-La estrategia recomendada es mantener un archivo administrado y explícitamente incluido por la configuración principal. La ruta definitiva debe decidirse tras auditar la integración correcta con la configuración Lua actual.
-
-Ejemplo conceptual:
+La implementación mantiene un archivo administrado y explícitamente incluido por la configuración principal:
 
 ```text
-~/.config/hypr/conf.d/nest-keybinds.conf
+~/.config/hypr/cachycaos/keybinds.lua
+```
+
+El manifiesto canónico que lo genera vive en:
+
+```text
+~/.local/share/cachycaos/modules/keybinds/data/binds.toml
 ```
 
 Deben mantenerse separadas:
@@ -577,11 +581,44 @@ Límite deliberado de esta fase:
 
 > v0.2 hace plenamente operativo el archivo administrado, pero todavía no migra ni edita visualmente los bindings personales. Los 54 atajos externos descubiertos permanecen bajo propiedad del usuario; N.E.S.T. sólo administra el binding declarado en su manifiesto.
 
+## Hito v0.3: editor, borradores e importación segura
+
+La segunda fase operativa quedó publicada el 22 de julio de 2026 sobre el ciclo seguro de v0.2.
+
+Capacidades incorporadas:
+
+- atribución de cada binding a su archivo y línea fuente reales;
+- vista separada de atajos administrados y borradores;
+- creación y edición visual de combinación, categoría, descripción, acción y argumento;
+- control explícito de evento `press`, `release` o `repeat`;
+- activación y desactivación individual;
+- edición de flags `locked` y `mouse`;
+- importación desde el inventario activo mediante la identidad runtime;
+- metadatos de procedencia para cada importación;
+- respaldo atómico del manifiesto antes de cada cambio;
+- bloqueo de habilitación y de `apply` cuando la combinación sigue activa fuera del archivo administrado;
+- acciones administradas de ejecución, ventanas, foco, layouts y workspaces.
+
+Flujo de migración:
+
+```text
+inventario activo
+→ inspeccionar origen
+→ importar como borrador apagado
+→ editar
+→ retirar conscientemente la definición externa
+→ habilitar
+→ revisar diff
+→ aplicar y validar
+```
+
+La importación nunca modifica el archivo personal. Si la definición original continúa activa, N.E.S.T. rechaza la habilitación e informa la ruta que conserva el conflicto. Esta separación mantiene clara la propiedad y evita que una operación visual reescriba silenciosamente `hyprland.lua`.
+
+La batería aislada cubre atribución por archivo, importación deshabilitada, rechazo de colisiones externas, edición TOML, nuevas acciones Lua y el rollback ya validado en v0.2.
+
 ## Pendientes
 
 - ampliar el esquema con hardware, proveedor y evidencia de detección;
-- resolver colisiones propuestas antes de instalar, además de los duplicados activos;
-- distinguir atajos del usuario, de Nest y de la shell;
 - implementar resolución por adaptadores;
 - detectar y configurar la ⭐ Special Key;
 - auditar F10/F11 de llamadas;
@@ -589,7 +626,6 @@ Límite deliberado de esta fase:
 - convertir `wev` en un asistente guiado;
 - inventariar dispositivos y teclas automáticamente;
 - exportar e importar perfiles;
-- crear interfaz de búsqueda;
 
 ## Criterio de finalización
 

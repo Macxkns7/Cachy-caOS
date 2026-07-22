@@ -19,6 +19,7 @@ class Binding:
     description: str
     action_type: str
     argument: str
+    source_path: str
     source_line: int
 
 
@@ -431,6 +432,7 @@ def scan_single_config(path: Path) -> list[Binding]:
                         description=description,
                         action_type=action_type,
                         argument=str(i),
+                        source_path=str(path.resolve()),
                         source_line=line_number,
                     )
                 )
@@ -450,6 +452,7 @@ def scan_single_config(path: Path) -> list[Binding]:
                 description=description,
                 action_type=action_type,
                 argument=argument,
+                source_path=str(path.resolve()),
                 source_line=line_number,
             )
         )
@@ -488,6 +491,7 @@ def write_tsv(bindings: list[Binding], output: Path) -> None:
                 binding.description,
                 binding.action_type,
                 binding.argument,
+                binding.source_path,
                 str(binding.source_line),
             ]
 
