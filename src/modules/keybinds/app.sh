@@ -286,7 +286,7 @@ show_details_by_display() {
     echo
     echo "Puedes revisarlo en 'Atajos administrados'."
   else
-    nest_warning "$output"
+    nest_warning "$output" || true
   fi
 
   pause_screen
@@ -448,7 +448,7 @@ add_managed_draft() {
     nest_success "Borrador creado y deshabilitado por seguridad."
     printf '%s\n' "$output"
   else
-    nest_warning "$output"
+    nest_warning "$output" || true
   fi
 
   pause_screen
@@ -502,7 +502,7 @@ edit_managed_record() {
     nest_success "Borrador actualizado."
     printf '%s\n' "$output"
   else
-    nest_warning "$output"
+    nest_warning "$output" || true
   fi
 
   pause_screen
@@ -521,7 +521,7 @@ toggle_managed_boolean() {
     nest_success "Propiedad '$field' actualizada a $next."
     printf '%s\n' "$output"
   else
-    nest_warning "$output"
+    nest_warning "$output" || true
   fi
 
   pause_screen
@@ -605,7 +605,7 @@ show_managed_record() {
           echo
           echo "Usa 'Planificar cambios' antes de aplicar."
         else
-          nest_warning "$output"
+          nest_warning "$output" || true
         fi
         pause_screen
         ;;
@@ -616,7 +616,7 @@ show_managed_record() {
           nest_success "Registro eliminado del manifiesto."
           printf '%s\n' "$output"
         else
-          nest_warning "$output"
+          nest_warning "$output" || true
         fi
         pause_screen
         return 0
