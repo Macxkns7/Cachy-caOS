@@ -3,6 +3,7 @@
 set -euo pipefail
 
 SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_ROOT="$(cd "$SOURCE/../.." && pwd)"
 MODULE="$HOME/.local/share/cachycaos/modules/keybinds"
 BIN="$HOME/.local/bin"
 
@@ -17,7 +18,7 @@ chmod 755 "$MODULE"/lib/*.py
 
 install -m 755 "$SOURCE/app.sh" "$MODULE/app.sh"
 install -m 755 \
-  "$SOURCE/bin/cachycaos-keybinds" \
+  "$SOURCE_ROOT/bin/cachycaos-keybinds" \
   "$BIN/cachycaos-keybinds"
 
 echo "✓ Módulo instalado: $MODULE"
