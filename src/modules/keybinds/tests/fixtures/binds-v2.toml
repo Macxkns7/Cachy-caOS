@@ -1,0 +1,36 @@
+version = 1
+
+[[bind]]
+id = "audio.raise"
+enabled = true
+modifiers = []
+key = "XF86AudioRaiseVolume"
+category = "Audio"
+description = "Subir volumen"
+action = "exec"
+argument = "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+event = "press"
+locked = true
+
+[[bind]]
+id = "mouse.workspace"
+enabled = true
+modifiers = ["SUPER"]
+key = "mouse_down"
+category = "Escritorios"
+description = "Siguiente escritorio"
+action = "exec"
+argument = "hyprctl dispatch workspace e+1"
+event = "repeat"
+mouse = true
+
+[[bind]]
+id = "launcher.release"
+enabled = true
+modifiers = ["SUPER"]
+key = "Space"
+category = "Lanzador"
+description = "Abrir lanzador al soltar"
+action = "exec"
+argument = "noctalia msg panel-toggle launcher"
+event = "release"
