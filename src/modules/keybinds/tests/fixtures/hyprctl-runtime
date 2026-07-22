@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+FIXTURES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+if [[ "${1:-}" == "binds" && "${2:-}" == "-j" ]]; then
+  sed -n '1,$p' "$FIXTURES/hyprctl-binds-broken.json"
+  exit 0
+fi
+
+if [[ "${1:-}" == "binds" ]]; then
+  sed -n '1,$p' "$FIXTURES/hyprctl-binds.txt"
+  exit 0
+fi
+
+exit 1
