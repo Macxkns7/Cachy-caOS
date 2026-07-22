@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+APP="$HOME/.local/share/cachycaos/modules/keybinds/app.sh"
+
+if [[ ! -x "$APP" ]]; then
+  echo "Error: módulo Keybinds no encontrado o no ejecutable: $APP" >&2
+  exit 1
+fi
+
+exec "$APP" "$@"
