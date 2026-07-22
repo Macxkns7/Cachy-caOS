@@ -15,6 +15,17 @@ trap cleanup EXIT
 
 python3 -m py_compile "$ROOT"/lib/*.py
 
+chmod +x "$ROOT/tests/fixtures/hyprctl-runtime"
+
+python3 "$ROOT/lib/runtime-scanner.py" \
+  --hyprctl "$ROOT/tests/fixtures/hyprctl-runtime" \
+  --output "$TEMP/runtime.tsv"
+
+test "$(wc -l < "$TEMP/runtime.tsv")" -eq 3
+grep -q $'SUPER + Q\t' "$TEMP/runtime.tsv"
+grep -q $'SUPER + SUPER_L\t.*\trelease$' "$TEMP/runtime.tsv"
+grep -q $'SUBIR VOLUMEN\t.*\tlocked,repeat$' "$TEMP/runtime.tsv"
+
 python3 "$GENERATOR" \
   --data "$FIXTURE" \
   --build "$TEMP/build.lua" \
