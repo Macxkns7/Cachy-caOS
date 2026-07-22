@@ -1,0 +1,29 @@
+bind
+	modmask: 64
+	submap:
+	key: Q
+	keycode: 0
+	catchall: false
+	description:
+	dispatcher: __lua
+	arg: 5
+
+bindrd
+	modmask: 64
+	submap:
+	key: SUPER_L
+	keycode: 0
+	catchall: false
+	description: Abrir lanzador de aplicaciones
+	dispatcher: __lua
+	arg: 17
+
+bindle
+	modmask: 0
+	submap:
+	key: XF86AudioRaiseVolume
+	keycode: 0
+	catchall: false
+	description: Subir volumen
+	dispatcher: __lua
+	arg: 83
