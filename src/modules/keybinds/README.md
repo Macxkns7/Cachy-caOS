@@ -5,6 +5,8 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 ## Alcance de v0.2
 
 - inventaría los bindings activos y sigue módulos Lua cargados con `require`;
+- tolera el JSON inválido de Hyprland 0.56 mediante fallback automático a
+  `hyprctl binds`;
 - relaciona el estado runtime con la configuración fuente;
 - detecta combinaciones duplicadas;
 - genera un archivo Lua dedicado desde `data/binds.toml`;
@@ -77,7 +79,8 @@ bash tests/run.sh
 ```
 
 La prueba incluye un rechazo simulado de Hyprland y comprueba que el archivo
-anterior se restaura byte por byte.
+anterior se restaura byte por byte. También reproduce la salida JSON corrupta
+observada en Hyprland 0.56 y valida la recuperación desde el formato textual.
 
 ## Pendiente
 
