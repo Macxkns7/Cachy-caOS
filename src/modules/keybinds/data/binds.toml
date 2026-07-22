@@ -1,0 +1,13 @@
+version = 1
+
+[[bind]]
+id = "window.close"
+enabled = true
+modifiers = ["SUPER"]
+key = "W"
+category = "Ventanas"
+description = "Cerrar ventana activa"
+action = "window.close"
+event = "press"
+locked = false
+mouse = false
