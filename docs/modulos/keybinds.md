@@ -1,7 +1,7 @@
 # Módulo Keybinds
 
-**Estado:** En desarrollo y funcional  
-**Última revisión:** 2026-07-21
+**Estado:** v0.2 operativa; edición visual pendiente  
+**Última revisión:** 2026-07-22
 
 ## Propósito
 
@@ -40,10 +40,18 @@ La serigrafía física orienta al usuario, pero no constituye una fuente técnic
 
 ## Estado actual
 
-Existe un módulo funcional bajo una estructura similar a:
+El código fuente canónico se encuentra en:
+
+```text
+src/modules/keybinds/
+src/bin/cachycaos-keybinds
+```
+
+La instalación activa utiliza:
 
 ```text
 ~/.local/share/cachycaos/modules/keybinds/app.sh
+~/.local/bin/cachycaos-keybinds
 ```
 
 Durante el desarrollo también existieron rutas anteriores y respaldos de migración:
@@ -531,12 +539,47 @@ Nunca debe escribirse directamente sobre el archivo activo sin una etapa tempora
 - Una capacidad nativa debe preferirse sobre una utilidad redundante.
 - La detección debe preceder a la propuesta de perfil.
 
+## Hito v0.2: ciclo administrado seguro
+
+La primera implementación completa del ciclo de vida quedó publicada el 22 de julio de 2026.
+
+Capacidades comprobadas:
+
+- scanner recursivo de configuración Lua y módulos cargados mediante `require`;
+- correlación entre los bindings runtime y su fuente;
+- manifiesto TOML separado de la configuración personal;
+- archivo administrado definitivo en `~/.config/hypr/cachycaos/keybinds.lua`;
+- modelo explícito de `press`, `release` y `repeat`;
+- flags `locked` y `mouse`;
+- `repeating = false` por omisión para evitar repeticiones peligrosas;
+- diff previo con `cachycaos-keybinds plan`;
+- instalación, respaldo, recarga y validación con `apply`;
+- comprobación de sincronía con `verify`;
+- recuperación explícita con `rollback`;
+- rollback automático cuando Hyprland rechaza la recarga o informa errores.
+
+La prueba automatizada simula deliberadamente un error de Hyprland y comprueba que el archivo anterior se restaura byte por byte. El scanner también fue validado contra la configuración real del ThinkBook: detectó 55 bindings sin necesidad de apropiarse del archivo principal.
+
+Comandos públicos:
+
+```bash
+cachycaos-keybinds
+cachycaos-keybinds refresh
+cachycaos-keybinds report
+cachycaos-keybinds plan
+cachycaos-keybinds apply
+cachycaos-keybinds verify
+cachycaos-keybinds rollback
+```
+
+Límite deliberado de esta fase:
+
+> v0.2 hace plenamente operativo el archivo administrado, pero todavía no migra ni edita visualmente los bindings personales. Los 54 atajos externos descubiertos permanecen bajo propiedad del usuario; N.E.S.T. sólo administra el binding declarado en su manifiesto.
+
 ## Pendientes
 
-- definir el esquema interno definitivo de un keybind;
-- decidir el archivo administrado compatible con la configuración Lua;
-- normalizar modificadores y eventos press/release/repeat;
-- resolver colisiones y prioridades;
+- ampliar el esquema con hardware, proveedor y evidencia de detección;
+- resolver colisiones propuestas antes de instalar, además de los duplicados activos;
 - distinguir atajos del usuario, de Nest y de la shell;
 - implementar resolución por adaptadores;
 - detectar y configurar la ⭐ Special Key;
@@ -546,8 +589,6 @@ Nunca debe escribirse directamente sobre el archivo activo sin una etapa tempora
 - inventariar dispositivos y teclas automáticamente;
 - exportar e importar perfiles;
 - crear interfaz de búsqueda;
-- integrar validación antes de recargar Hyprland;
-- documentar la v0.2 desde los respaldos existentes.
 
 ## Criterio de finalización
 
