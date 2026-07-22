@@ -44,6 +44,10 @@ Desde este directorio:
 bash install.sh
 ```
 
+Las actualizaciones reemplazan el código del módulo, pero nunca sobrescriben
+un `data/binds.toml` existente. El manifiesto creado o editado por el usuario
+se conserva entre instalaciones.
+
 ## Uso
 
 ```bash
