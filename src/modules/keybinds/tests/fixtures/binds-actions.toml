@@ -1,0 +1,117 @@
+version = 1
+
+[[bind]]
+id = "action.exec"
+enabled = true
+modifiers = ["SUPER"]
+key = "Q"
+category = "Aplicaciones"
+description = "Ejecutar"
+action = "exec"
+argument = "kitty"
+
+[[bind]]
+id = "action.close"
+enabled = true
+modifiers = ["SUPER"]
+key = "C"
+category = "Ventanas"
+description = "Cerrar"
+action = "window.close"
+
+[[bind]]
+id = "action.float"
+enabled = true
+modifiers = ["SUPER"]
+key = "V"
+category = "Ventanas"
+description = "Flotante"
+action = "window.float.toggle"
+
+[[bind]]
+id = "action.pseudo"
+enabled = true
+modifiers = ["SUPER"]
+key = "P"
+category = "Ventanas"
+description = "Pseudo"
+action = "window.pseudo"
+
+[[bind]]
+id = "action.fullscreen"
+enabled = true
+modifiers = ["SUPER"]
+key = "F"
+category = "Ventanas"
+description = "Pantalla completa"
+action = "window.fullscreen"
+
+[[bind]]
+id = "action.drag"
+enabled = true
+modifiers = ["SUPER"]
+key = "mouse:272"
+category = "Ventanas"
+description = "Arrastrar"
+action = "window.drag"
+mouse = true
+
+[[bind]]
+id = "action.resize"
+enabled = true
+modifiers = ["SUPER"]
+key = "mouse:273"
+category = "Ventanas"
+description = "Redimensionar"
+action = "window.resize"
+mouse = true
+
+[[bind]]
+id = "action.layout"
+enabled = true
+modifiers = ["SUPER"]
+key = "J"
+category = "Ventanas"
+description = "Diseño"
+action = "layout"
+argument = "togglesplit"
+
+[[bind]]
+id = "action.focus"
+enabled = true
+modifiers = ["SUPER"]
+key = "left"
+category = "Ventanas"
+description = "Foco"
+action = "focus"
+argument = "left"
+
+[[bind]]
+id = "action.workspace"
+enabled = true
+modifiers = ["SUPER"]
+key = "1"
+category = "Workspaces"
+description = "Workspace"
+action = "workspace.focus"
+argument = "1"
+
+[[bind]]
+id = "action.special"
+enabled = true
+modifiers = ["SUPER"]
+key = "S"
+category = "Workspaces"
+description = "Especial"
+action = "workspace.special"
+argument = "magic"
+
+[[bind]]
+id = "action.move"
+enabled = true
+modifiers = ["SUPER", "SHIFT"]
+key = "1"
+category = "Workspaces"
+description = "Mover"
+action = "window.move"
+argument = "1"

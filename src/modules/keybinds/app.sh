@@ -215,7 +215,7 @@ render_records() {
 
 show_summary() {
   nest_clear
-  nest_header "Atajos de teclado" "v0.3 · Editor seguro"
+  nest_header "Atajos de teclado" "v0.4 · Migración segura"
 
   gum style \
     --border rounded \
@@ -386,6 +386,96 @@ render_managed_records() {
         printf "%-24s · %-9s · %s → %s\n", $1, state, $3, $5
       }
     '
+}
+
+managed_draft_count() {
+  run_editor list |
+    awk -F '\t' '$2 == "false" { count++ } END { print count + 0 }'
+}
+
+import_external_drafts() {
+  local preview output
+
+  refresh_runtime
+  nest_clear
+  nest_header "Atajos de teclado" "Importación masiva"
+
+  if ! preview="$(run_editor import-all --dry-run 2>&1)"; then
+    nest_warning "$preview" || true
+    pause_screen
+    return 0
+  fi
+
+  printf '%s\n' "$preview"
+
+  if grep -q 'Atajos por importar: 0' <<<"$preview"; then
+    nest_success "No hay atajos externos nuevos por importar."
+    pause_screen
+    return 0
+  fi
+
+  echo
+  gum confirm \
+    "¿Crear todos estos registros como borradores deshabilitados?" || {
+      nest_warning "Operación cancelada; no se modificó nada." || true
+      pause_screen
+      return 0
+    }
+
+  if output="$(run_editor import-all 2>&1)"; then
+    nest_success "Importación completada como una sola transacción."
+    printf '%s\n' "$output"
+    echo
+    echo "Los atajos siguen activos desde su origen y los nuevos registros"
+    echo "permanecen deshabilitados hasta completar la migración."
+  else
+    nest_warning "$output" || true
+  fi
+
+  pause_screen
+}
+
+enable_all_drafts() {
+  local count output
+
+  refresh_runtime
+  count="$(managed_draft_count)"
+
+  nest_clear
+  nest_header "Atajos de teclado" "Habilitar borradores"
+
+  if ((count == 0)); then
+    nest_success "No hay borradores deshabilitados."
+    pause_screen
+    return 0
+  fi
+
+  gum style \
+    --border rounded \
+    --padding "1 2" \
+    "Borradores preparados: $count" \
+    "" \
+    "N.E.S.T. comprobará el lote completo antes de escribir." \
+    "Si una combinación sigue activa fuera del módulo," \
+    "ningún registro será habilitado."
+
+  echo
+  gum confirm "¿Comprobar y habilitar los $count borradores?" || {
+    nest_warning "Operación cancelada; no se modificó nada." || true
+    pause_screen
+    return 0
+  }
+
+  if output="$(run_editor enable-drafts 2>&1)"; then
+    nest_success "Todos los borradores quedaron habilitados."
+    printf '%s\n' "$output"
+    echo
+    echo "Revisa 'Planificar cambios' antes de aplicar."
+  else
+    nest_warning "$output" || true
+  fi
+
+  pause_screen
 }
 
 choose_action() {
@@ -655,9 +745,22 @@ show_managed() {
     nest_clear
     nest_header "Atajos de teclado" "Administrados y borradores"
 
-    choice="$(nest_menu "Nuevo borrador" "Abrir registro" "Volver")" || true
+    choice="$(
+      nest_menu \
+        "Importar externos compatibles" \
+        "Habilitar todos los borradores" \
+        "Nuevo borrador" \
+        "Abrir registro" \
+        "Volver"
+    )" || true
 
     case "$choice" in
+      "Importar externos compatibles")
+        import_external_drafts
+        ;;
+      "Habilitar todos los borradores")
+        enable_all_drafts
+        ;;
       "Nuevo borrador")
         add_managed_draft
         ;;
@@ -682,7 +785,7 @@ show_managed() {
 
 export_report() {
   {
-    echo "Cachy-caOS · Atajos de teclado v0.3"
+    echo "Cachy-caOS · Atajos de teclado v0.4"
     echo "Generado: $(date '+%Y-%m-%d %H:%M:%S')"
     echo
     echo "Atajos activos: $(total_count)"
@@ -709,7 +812,7 @@ main_menu() {
 
   while true; do
     nest_clear
-    nest_header "Cachy-caOS" "Atajos de teclado · v0.3"
+    nest_header "Cachy-caOS" "Atajos de teclado · v0.4"
 
     choice="$(
       nest_menu \

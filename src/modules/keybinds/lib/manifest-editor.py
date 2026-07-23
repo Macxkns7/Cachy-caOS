@@ -11,6 +11,7 @@ import shutil
 import sys
 import tempfile
 import tomllib
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -58,6 +59,17 @@ KEY_ALIASES = {
     "CLIC IZQUIERDO": "mouse:272",
     "CLIC DERECHO": "mouse:273",
     "CLIC CENTRAL": "mouse:274",
+}
+
+CATEGORY_PREFIXES = {
+    "aplicaciones": "apps",
+    "audio": "media",
+    "escritorios": "workspaces",
+    "general": "general",
+    "multimedia": "media",
+    "sistema": "system",
+    "ventanas": "windows",
+    "workspaces": "workspaces",
 }
 
 
@@ -129,6 +141,35 @@ def combo_for(record: dict[str, Any]) -> str:
 def canonical_combo(combo: str) -> str:
     modifiers, key = parse_combo(combo)
     return " + ".join([*modifiers, key.upper()])
+
+
+def slugify(value: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", value)
+    ascii_value = "".join(
+        character for character in decomposed
+        if not unicodedata.combining(character)
+    )
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_value.lower()).strip("-")
+    return slug or "atajo"
+
+
+def identifier_for(
+    category: str,
+    combo: str,
+    used_identifiers: set[str],
+) -> str:
+    category_slug = slugify(category or "General")
+    prefix = CATEGORY_PREFIXES.get(category_slug, category_slug)
+    base = f"{prefix}.{slugify(combo)}"
+    candidate = base
+    suffix = 2
+
+    while candidate in used_identifiers:
+        candidate = f"{base}-{suffix}"
+        suffix += 1
+
+    used_identifiers.add(candidate)
+    return candidate
 
 
 def normalize_action(action: str) -> str:
@@ -326,13 +367,22 @@ def read_inventory(path: Path) -> list[list[str]]:
     return rows
 
 
+def is_managed_origin(origin: str, managed_target: Path) -> bool:
+    try:
+        return (
+            Path(origin).expanduser().resolve()
+            == managed_target.expanduser().resolve()
+        )
+    except OSError:
+        return False
+
+
 def conflicts_for(
     records: list[dict[str, Any]],
     inventory: Path,
     managed_target: Path,
 ) -> list[str]:
     rows = read_inventory(inventory)
-    managed = managed_target.expanduser().resolve()
     conflicts: list[str] = []
 
     for record in records:
@@ -348,12 +398,7 @@ def conflicts_for(
             if runtime_combo != expected:
                 continue
 
-            try:
-                is_managed = Path(origin).expanduser().resolve() == managed
-            except OSError:
-                is_managed = False
-
-            if not is_managed:
+            if not is_managed_origin(origin, managed_target):
                 conflicts.append(
                     f"{record['id']}: {combo_for(record)} ya existe en "
                     f"{origin or 'runtime'}"
@@ -390,9 +435,14 @@ def import_record(
         source_line,
         _dispatcher,
         _runtime_argument,
-        _submap,
+        submap,
         flags,
     ) = row
+    if submap not in {"", "-", "global"}:
+        fail(
+            f"El submap '{submap}' todavía no puede ser administrado "
+            "por N.E.S.T."
+        )
     modifiers, key = parse_combo(combo)
     event, locked, mouse = flags_from_text(flags)
     normalized_action = normalize_action(action)
@@ -419,6 +469,71 @@ def import_record(
 
     validate_record(record, 1)
     return record
+
+
+def bulk_import_records(
+    records: list[dict[str, Any]],
+    rows: list[list[str]],
+    managed_target: Path,
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    existing_identities = {
+        str(record["imported_identity"])
+        for record in records
+        if record.get("imported_identity")
+    }
+    used_identifiers = {str(record["id"]) for record in records}
+    imported: list[dict[str, Any]] = []
+    skipped: list[str] = []
+    errors: list[str] = []
+
+    for row in rows:
+        identity, combo, category, *_rest = row
+        origin = row[6]
+
+        if is_managed_origin(origin, managed_target):
+            skipped.append(f"{combo}: ya administrado por N.E.S.T.")
+            continue
+
+        if identity in existing_identities:
+            skipped.append(f"{combo}: ya importado")
+            continue
+
+        identifier = identifier_for(category, combo, used_identifiers)
+
+        try:
+            imported.append(import_record(rows, identity, identifier))
+        except ValueError as error:
+            errors.append(f"{combo}: {error}")
+
+    if errors:
+        fail(
+            "La importación masiva fue cancelada; no se modificó nada:\n"
+            + "\n".join(errors)
+        )
+
+    proposed = [*records, *imported]
+    validate_document(proposed)
+    return proposed, imported, skipped
+
+
+def print_bulk_import(
+    imported: list[dict[str, Any]],
+    skipped: list[str],
+    dry_run: bool,
+) -> None:
+    label = "por importar" if dry_run else "importados"
+    print(f"✓ Atajos {label}: {len(imported)}")
+
+    for record in imported:
+        print(
+            f"  {record['id']}: {combo_for(record)}"
+            f" → {record['description']}"
+        )
+
+    if skipped:
+        print(f"✓ Omitidos de forma segura: {len(skipped)}")
+        for message in skipped:
+            print(f"  {message}")
 
 
 def print_records(records: list[dict[str, Any]], output_format: str) -> None:
@@ -474,6 +589,9 @@ def main() -> int:
     import_parser.add_argument("--identity", required=True)
     import_parser.add_argument("--id", required=True)
 
+    import_all_parser = subparsers.add_parser("import-all")
+    import_all_parser.add_argument("--dry-run", action="store_true")
+
     set_parser = subparsers.add_parser("set")
     set_parser.add_argument("--id", required=True)
     set_parser.add_argument("--combo")
@@ -489,6 +607,7 @@ def main() -> int:
         command_parser = subparsers.add_parser(command)
         command_parser.add_argument("--id", required=True)
 
+    subparsers.add_parser("enable-drafts")
     subparsers.add_parser("check-conflicts")
     args = parser.parse_args()
 
@@ -505,6 +624,54 @@ def main() -> int:
                 print("\n".join(conflicts), file=sys.stderr)
                 return 2
             print("✓ Sin conflictos externos")
+            return 0
+
+        if args.command == "import-all":
+            rows = read_inventory(args.inventory)
+            records, imported, skipped = bulk_import_records(
+                records,
+                rows,
+                args.managed_target,
+            )
+            print_bulk_import(imported, skipped, args.dry_run)
+
+            if args.dry_run or not imported:
+                return 0
+
+            backup = save_document(args.data, args.backups, records)
+            print(f"✓ Manifiesto actualizado: {args.data}")
+            print(f"✓ Respaldo: {backup}")
+            return 0
+
+        if args.command == "enable-drafts":
+            drafts = [
+                record for record in records
+                if not record.get("enabled", True)
+            ]
+
+            if not drafts:
+                print("✓ No hay borradores deshabilitados")
+                return 0
+
+            for record in drafts:
+                record["enabled"] = True
+
+            conflicts = conflicts_for(
+                records,
+                args.inventory,
+                args.managed_target,
+            )
+            if conflicts:
+                fail(
+                    "No se puede habilitar el lote; "
+                    "no se modificó nada:\n"
+                    + "\n".join(conflicts)
+                )
+
+            backup = save_document(args.data, args.backups, records)
+            print(f"✓ Borradores habilitados: {len(drafts)}")
+            print(f"✓ Manifiesto actualizado: {args.data}")
+            print(f"✓ Respaldo: {backup}")
             return 0
 
         if args.command == "add":

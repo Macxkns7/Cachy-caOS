@@ -1,0 +1,4 @@
+external-terminal	SUPER + Return	Aplicaciones	Abrir terminal	exec	kitty	/tmp/user-hyprland.lua	42	__lua	5	global	-
+external-close	SUPER + C	Ventanas	Cerrar ventana	window.close	-	/tmp/user-hyprland.lua	43	__lua	7	global	-
+external-workspace	SUPER + 2	Workspaces	Ir al workspace 2	workspace.focus	2	/tmp/user-hyprland.lua	44	__lua	9	global	-
+managed-window	SUPER + W	Ventanas	Cerrar ventana administrada	window.close	-	/tmp/managed-keybinds.lua	8	__lua	11	global	-

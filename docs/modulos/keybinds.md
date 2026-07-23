@@ -1,7 +1,7 @@
 # Módulo Keybinds
 
-**Estado:** v0.3 operativa; editor e importación segura disponibles  
-**Última revisión:** 2026-07-22
+**Estado:** v0.4 operativa; migración masiva segura disponible
+**Última revisión:** 2026-07-23
 
 ## Propósito
 
@@ -615,6 +615,57 @@ inventario activo
 La importación nunca modifica el archivo personal. Si la definición original continúa activa, N.E.S.T. rechaza la habilitación e informa la ruta que conserva el conflicto. Esta separación mantiene clara la propiedad y evita que una operación visual reescriba silenciosamente `hyprland.lua`.
 
 La batería aislada cubre atribución por archivo, importación deshabilitada, rechazo de colisiones externas, edición TOML, nuevas acciones Lua y el rollback ya validado en v0.2.
+
+El primer ciclo real se completó con `SUPER + Q`: la definición que abría Kitty
+fue importada, el conflicto externo bloqueó correctamente su activación, se
+retiró de forma explícita de `hyprland.lua` y N.E.S.T. pasó a administrarla sin
+cambiar su comportamiento. El inventario final atribuyó la combinación a
+`~/.config/hypr/cachycaos/keybinds.lua`.
+
+## Hito v0.4: migración masiva transaccional
+
+La tercera fase operativa amplía el flujo individual sin reducir sus garantías.
+
+Capacidades incorporadas:
+
+- vista previa de todos los atajos externos compatibles;
+- importación masiva como borradores deshabilitados;
+- IDs deterministas basados en categoría y combinación;
+- omisión de registros ya administrados o previamente importados;
+- idempotencia: repetir la operación no crea duplicados;
+- cancelación completa si aparece una acción que el modelo todavía no soporta;
+- habilitación de todos los borradores como una sola transacción;
+- bloqueo global si una sola combinación continúa activa fuera del archivo
+  administrado;
+- una única escritura y un único respaldo por operación masiva.
+
+Flujo previsto para la migración real:
+
+```text
+inventariar 55 atajos
+→ omitir los 2 ya administrados
+→ previsualizar 53 borradores
+→ importar sin alterar el runtime
+→ respaldar y retirar el bloque personal original
+→ refrescar el inventario
+→ habilitar los 53 como un solo lote
+→ revisar diff
+→ aplicar con rollback automático
+→ probar por categorías
+```
+
+La interfaz expone las operaciones desde `Atajos administrados` mediante
+`Importar externos compatibles` y `Habilitar todos los borradores`. N.E.S.T.
+no retira por sí mismo las definiciones externas: esa transición continúa
+siendo explícita, respaldada y revisable.
+
+Las pruebas automatizadas cubren los doce tipos de acción usados por la
+configuración observada: ejecución, cierre, flotante, pseudotiling, pantalla
+completa, arrastre, redimensionado, layout, foco, cambio de workspace,
+workspace especial y movimiento de ventanas. También validan vista previa sin
+escritura, IDs deterministas, idempotencia, rechazo atómico de acciones
+incompatibles, bloqueo de conflictos del lote y habilitación completa sólo
+cuando el origen externo ya fue retirado.
 
 ## Pendientes
 

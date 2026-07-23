@@ -1,0 +1,2 @@
+external-terminal	SUPER + Return	Aplicaciones	Abrir terminal	exec	kitty	/tmp/user-hyprland.lua	42	__lua	5	global	-
+external-unknown	SUPER + X	General	Acción todavía desconocida	plugin.magic	-	/tmp/user-hyprland.lua	43	__lua	7	global	-

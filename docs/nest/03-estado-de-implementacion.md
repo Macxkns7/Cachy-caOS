@@ -1,7 +1,7 @@
 # Estado de implementación de Nest
 
 **Estado:** En desarrollo  
-**Última revisión:** 2026-07-21
+**Última revisión:** 2026-07-23
 
 ## Propósito
 
@@ -30,6 +30,28 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 - Keybinds.
 
 Ambos módulos han sido probados de forma independiente y desde el lanzador principal.
+
+### Keybinds v0.4
+
+Estado: **ciclo administrado y migración masiva implementados; migración real
+del lote pendiente de validación final**.
+
+Capacidades confirmadas:
+
+- inventario runtime con fallback ante el JSON inválido de Hyprland 0.56;
+- atribución a archivo y línea fuente;
+- manifiesto TOML persistente y archivo Lua administrado separado;
+- edición visual e importación individual como borrador;
+- piloto real `SUPER + Q` migrado sin cambiar su comportamiento;
+- importación masiva transaccional con vista previa e IDs deterministas;
+- activación atómica del lote y bloqueo global de conflictos externos;
+- generación validada de los doce tipos de acción usados en el sistema;
+- respaldo, diff, recarga, verificación y rollback automático.
+
+La siguiente validación operativa migrará los 53 atajos personales restantes y
+los probará por categorías antes de incorporar nuevas combinaciones.
+
+Fuente: `docs/modulos/keybinds.md`.
 
 ### Organización del launcher
 

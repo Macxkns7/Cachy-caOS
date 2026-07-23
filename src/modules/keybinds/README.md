@@ -2,7 +2,7 @@
 
 Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 
-## Alcance de v0.3
+## Alcance de v0.4
 
 - inventaría los bindings activos y sigue módulos Lua cargados con `require`;
 - tolera el JSON inválido de Hyprland 0.56 mediante fallback automático a
@@ -19,6 +19,11 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
   administrado;
 - crea y edita bindings como registros de un manifiesto TOML;
 - importa bindings personales como borradores inicialmente deshabilitados;
+- ofrece una vista previa e importación masiva de todos los bindings externos
+  compatibles, con IDs deterministas y sin duplicar importaciones anteriores;
+- puede habilitar todos los borradores como una sola transacción;
+- cancela el lote completo si encuentra una acción incompatible o una sola
+  combinación todavía activa fuera del archivo administrado;
 - bloquea la habilitación y la aplicación si la combinación original continúa
   activa fuera del archivo administrado;
 - conserva un respaldo independiente antes de cada cambio del manifiesto.
@@ -80,7 +85,7 @@ Cada `[[bind]]` admite:
 | `action` | acción lógica soportada o `exec` |
 | `argument` | valor obligatorio para acciones parametrizadas |
 
-Las acciones administradas en v0.3 son:
+Las acciones administradas en v0.4 son:
 
 ```text
 exec
@@ -109,9 +114,10 @@ bash tests/run.sh
 La prueba incluye un rechazo simulado de Hyprland y comprueba que el archivo
 anterior se restaura byte por byte. También reproduce la salida JSON corrupta
 observada en Hyprland 0.56 y valida la recuperación desde el formato textual.
-Además cubre atribución por archivo fuente, importación deshabilitada, bloqueo
-de colisiones externas, edición del manifiesto y generación de acciones
-parametrizadas.
+Además cubre atribución por archivo fuente, importación individual y masiva
+deshabilitada, IDs deterministas, idempotencia, cancelación atómica ante una
+acción incompatible, bloqueo global de colisiones externas, edición del
+manifiesto y los doce tipos de acciones administradas.
 
 ## Flujo seguro de migración
 
@@ -124,6 +130,15 @@ parametrizadas.
 6. N.E.S.T. sólo permite habilitarlo cuando ya no existe la colisión externa.
 7. `Planificar cambios` enseña el diff y `Aplicar cambios` pide confirmación,
    respalda, recarga y valida Hyprland.
+
+Para migrar un conjunto completo, `Atajos administrados` ofrece:
+
+1. `Importar externos compatibles`, que primero enseña la vista previa y luego
+   crea todos los registros como borradores;
+2. retiro explícito y respaldado de las definiciones personales originales;
+3. `Habilitar todos los borradores`, que comprueba el lote completo sin
+   guardar cambios parciales;
+4. planificación, aplicación y prueba por categorías.
 
 N.E.S.T. nunca comenta, elimina ni reescribe silenciosamente el archivo Lua
 personal del usuario.
