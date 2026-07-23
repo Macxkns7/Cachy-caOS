@@ -31,6 +31,26 @@ MANIFEST_EDITOR="$LIB_DIR/manifest-editor.py"
 
 source "$NEST"
 
+if ! declare -F nest_warning >/dev/null; then
+  nest_warning() {
+    local message="$*"
+
+    if command -v gum >/dev/null 2>&1; then
+      gum style \
+        --border rounded \
+        --border-foreground 214 \
+        --foreground 214 \
+        --padding "0 1" \
+        "⚠ Atención" \
+        "$message" || true
+    else
+      printf '⚠ %s\n' "$message"
+    fi
+
+    return 0
+  }
+fi
+
 die() {
   nest_error "$*"
   exit 1
