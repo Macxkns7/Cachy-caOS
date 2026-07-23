@@ -31,10 +31,10 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 
 Ambos módulos han sido probados de forma independiente y desde el lanzador principal.
 
-### Keybinds v0.4
+### Keybinds v0.5
 
-Estado: **ciclo administrado y migración masiva implementados; migración real
-del lote pendiente de validación final**.
+Estado: **los 55 atajos del sistema están administrados y validados; soporte
+para pulsación larga implementado y pendiente de prueba física**.
 
 Capacidades confirmadas:
 
@@ -45,11 +45,18 @@ Capacidades confirmadas:
 - piloto real `SUPER + Q` migrado sin cambiar su comportamiento;
 - importación masiva transaccional con vista previa e IDs deterministas;
 - activación atómica del lote y bloqueo global de conflictos externos;
+- migración real completada con 55 atajos activos, cero borradores y propiedad
+  exclusiva del archivo administrado;
+- comprobación práctica por familias: aplicaciones, ventanas, workspaces,
+  volumen, brillo, capturas y teclas especiales;
+- eventos `press` y `long_press` compatibles sobre una misma tecla;
+- detección de `XF86PickupPhone` y `XF86HangupPhone` con nombres legibles;
 - generación validada de los doce tipos de acción usados en el sistema;
 - respaldo, diff, recarga, verificación y rollback automático.
 
-La siguiente validación operativa migrará los 53 atajos personales restantes y
-los probará por categorías antes de incorporar nuevas combinaciones.
+La siguiente validación operativa asignará `XF86PickupPhone` a reproducir o
+pausar y `XF86HangupPhone` a pista siguiente con pulsación breve y pista
+anterior con pulsación larga.
 
 Fuente: `docs/modulos/keybinds.md`.
 

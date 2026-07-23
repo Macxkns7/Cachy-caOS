@@ -1,2 +1,4 @@
 runtime-q	SUPER + Q	Ejecutar: kitty		__lua	5	global	-
 runtime-w	SUPER + W	Cerrar ventana activa	Cerrar ventana activa	__lua	7	global	-
+runtime-hangup-next	FINALIZAR LLAMADA	Siguiente pista	Siguiente pista	__lua	9	global	-
+runtime-hangup-previous	FINALIZAR LLAMADA	Pista anterior	Pista anterior	__lua	11	global	long_press

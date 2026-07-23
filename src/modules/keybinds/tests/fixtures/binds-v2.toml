@@ -34,3 +34,27 @@ description = "Abrir lanzador al soltar"
 action = "exec"
 argument = "noctalia msg panel-toggle launcher"
 event = "release"
+
+[[bind]]
+id = "media.hangup.previous"
+enabled = true
+modifiers = []
+key = "XF86HangupPhone"
+category = "Multimedia"
+description = "Pista anterior con pulsación larga"
+action = "exec"
+argument = "playerctl previous"
+event = "long_press"
+locked = true
+
+[[bind]]
+id = "media.hangup.next"
+enabled = true
+modifiers = []
+key = "XF86HangupPhone"
+category = "Multimedia"
+description = "Siguiente pista"
+action = "exec"
+argument = "playerctl next"
+event = "press"
+locked = true

@@ -27,3 +27,23 @@ bindle
 	description: Subir volumen
 	dispatcher: __lua
 	arg: 83
+
+bindo
+	modmask: 0
+	submap:
+	key: XF86HangupPhone
+	keycode: 0
+	catchall: false
+	description: Pista anterior con pulsación larga
+	dispatcher: __lua
+	arg: 85
+
+bind
+	modmask: 0
+	submap:
+	key: XF86HangupPhone
+	keycode: 0
+	catchall: false
+	description: Siguiente pista
+	dispatcher: __lua
+	arg: 87

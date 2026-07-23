@@ -30,6 +30,8 @@ KEY_NAMES = {
     "XF86AudioPrev": "PISTA ANTERIOR",
     "XF86AudioPlay": "REPRODUCIR",
     "XF86AudioPause": "PAUSA",
+    "XF86PickupPhone": "CONTESTAR LLAMADA",
+    "XF86HangupPhone": "FINALIZAR LLAMADA",
     "mouse_down": "RUEDA ABAJO",
     "mouse_up": "RUEDA ARRIBA",
     "mouse:272": "CLIC IZQUIERDO",
@@ -53,6 +55,7 @@ class RuntimeBind:
     mouse: bool
     release: bool
     repeat: bool
+    long_press: bool
 
 
 def run(command: list[str]) -> subprocess.CompletedProcess[str]:
@@ -104,6 +107,7 @@ def parse_json(raw: str) -> list[RuntimeBind]:
                 mouse=as_bool(record.get("mouse")),
                 release=as_bool(record.get("release")),
                 repeat=as_bool(record.get("repeat")),
+                long_press=as_bool(record.get("longPress")),
             )
         )
 
@@ -129,6 +133,7 @@ def text_record(
         mouse="m" in suffix,
         release="r" in suffix,
         repeat="e" in suffix,
+        long_press="o" in suffix,
     )
 
 
@@ -198,6 +203,8 @@ def display_flags(bind: RuntimeBind) -> str:
         flags.append("release")
     if bind.repeat:
         flags.append("repeat")
+    if bind.long_press:
+        flags.append("long_press")
 
     return ",".join(flags) if flags else "-"
 

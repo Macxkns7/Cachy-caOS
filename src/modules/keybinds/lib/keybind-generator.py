@@ -109,10 +109,10 @@ def parse_bind(
 
     event = record.get("event", "press")
 
-    if event not in {"press", "release", "repeat"}:
+    if event not in {"press", "release", "repeat", "long_press"}:
         fail(
             f"bind #{bind_number}: 'event' debe ser "
-            "press, release o repeat."
+            "press, release, repeat o long_press."
         )
 
     locked = record.get("locked", False)
@@ -310,6 +310,9 @@ def render_lua(binds: list[Bind]) -> str:
             options.append("        repeating = false,")
         elif bind.event == "repeat":
             options.append("        repeating = true,")
+        elif bind.event == "long_press":
+            options.append("        long_press = true,")
+            options.append("        repeating = false,")
         else:
             options.append("        repeating = false,")
 

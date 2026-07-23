@@ -23,18 +23,28 @@ python3 "$ROOT/lib/runtime-scanner.py" \
   --hyprctl "$ROOT/tests/fixtures/hyprctl-runtime" \
   --output "$TEMP/runtime.tsv"
 
-test "$(wc -l < "$TEMP/runtime.tsv")" -eq 3
+test "$(wc -l < "$TEMP/runtime.tsv")" -eq 5
 grep -q $'SUPER + Q\t' "$TEMP/runtime.tsv"
 grep -q $'SUPER + SUPER_L\t.*\trelease$' "$TEMP/runtime.tsv"
 grep -q $'SUBIR VOLUMEN\t.*\tlocked,repeat$' "$TEMP/runtime.tsv"
+grep -q $'FINALIZAR LLAMADA\t.*\tlong_press$' "$TEMP/runtime.tsv"
+grep -q $'FINALIZAR LLAMADA\t.*\t-$' "$TEMP/runtime.tsv"
+
+test "$(
+  python3 "$EDITOR" \
+    --data "$FIXTURE" \
+    --backups "$TEMP/fixture-backups" \
+    list | wc -l
+)" -eq 5
 
 python3 "$ROOT/lib/source-scanner.py" \
   --config "$ROOT/tests/fixtures/source-root.lua" \
   --output "$TEMP/source.tsv"
 
-test "$(wc -l < "$TEMP/source.tsv")" -eq 2
-awk -F '\t' 'NF != 7 { exit 1 }' "$TEMP/source.tsv"
+test "$(wc -l < "$TEMP/source.tsv")" -eq 4
+awk -F '\t' 'NF != 8 { exit 1 }' "$TEMP/source.tsv"
 grep -q $'SUPER + W\t.*managed.lua\t' "$TEMP/source.tsv"
+grep -q $'XF86HANGUPPHONE\t.*playerctl previous\tlong_press\t' "$TEMP/source.tsv"
 
 python3 "$ROOT/lib/bind-resolver.py" \
   --runtime "$ROOT/tests/fixtures/runtime-source.tsv" \
@@ -45,6 +55,10 @@ python3 "$ROOT/lib/bind-resolver.py" \
 awk -F '\t' 'NF != 12 { exit 1 }' "$TEMP/enriched-source.tsv"
 grep -q $'SUPER + Q\t.*source-root.lua\t' "$TEMP/enriched-source.tsv"
 grep -q $'SUPER + W\t.*managed.lua\t' "$TEMP/enriched-source.tsv"
+grep -q $'FINALIZAR LLAMADA\t.*Siguiente pista\texec\tplayerctl next\t' \
+  "$TEMP/enriched-source.tsv"
+grep -q $'FINALIZAR LLAMADA\t.*Pista anterior\texec\tplayerctl previous\t' \
+  "$TEMP/enriched-source.tsv"
 
 python3 "$GENERATOR" \
   --data "$FIXTURE" \
@@ -58,6 +72,49 @@ grep -q 'mouse = true' "$TEMP/target.lua"
 grep -q 'release = true' "$TEMP/target.lua"
 grep -q 'repeating = true' "$TEMP/target.lua"
 grep -q 'repeating = false' "$TEMP/target.lua"
+grep -q 'long_press = true' "$TEMP/target.lua"
+test "$(grep -c 'XF86HangupPhone' "$TEMP/target.lua")" -eq 2
+
+cp "$ROOT/data/binds.toml" "$TEMP/longpress-conflicts.toml"
+printf '%s\n' \
+  $'external-long\tFINALIZAR LLAMADA\tMultimedia\tPista anterior\texec\tplayerctl previous\t/tmp/user-hyprland.lua\t42\t__lua\t5\tglobal\tlong_press' \
+  > "$TEMP/longpress-inventory.tsv"
+
+python3 "$EDITOR" \
+  --data "$TEMP/longpress-conflicts.toml" \
+  --backups "$TEMP/longpress-backups" \
+  --inventory "$TEMP/longpress-inventory.tsv" \
+  --managed-target /tmp/managed-keybinds.lua \
+  add --id media.hangup.next --combo "XF86HangupPhone" \
+  --category Multimedia --description "Siguiente pista" \
+  --action exec --argument "playerctl next" --event press --enabled
+
+python3 "$EDITOR" \
+  --data "$TEMP/longpress-conflicts.toml" \
+  --backups "$TEMP/longpress-backups" \
+  --inventory "$TEMP/longpress-inventory.tsv" \
+  --managed-target /tmp/managed-keybinds.lua \
+  check-conflicts
+
+python3 "$EDITOR" \
+  --data "$TEMP/longpress-conflicts.toml" \
+  --backups "$TEMP/longpress-backups" \
+  --inventory "$TEMP/longpress-inventory.tsv" \
+  --managed-target /tmp/managed-keybinds.lua \
+  add --id media.hangup.previous --combo "XF86HangupPhone" \
+  --category Multimedia --description "Pista anterior" \
+  --action exec --argument "playerctl previous" \
+  --event long_press --enabled
+
+if python3 "$EDITOR" \
+  --data "$TEMP/longpress-conflicts.toml" \
+  --backups "$TEMP/longpress-backups" \
+  --inventory "$TEMP/longpress-inventory.tsv" \
+  --managed-target /tmp/managed-keybinds.lua \
+  check-conflicts; then
+  echo "Error: no se detectó el conflicto long_press externo." >&2
+  exit 1
+fi
 
 python3 "$GENERATOR" \
   --data "$ACTION_FIXTURE" \

@@ -179,8 +179,23 @@ without_description_count() {
 
 duplicate_count() {
   awk -F '\t' '
+    function binding_event(flags, item_count, items, index) {
+      item_count = split(flags, items, ",")
+
+      for (index = 1; index <= item_count; index++) {
+        if (items[index] == "long_press")
+          return "long_press"
+        if (items[index] == "release")
+          return "release"
+        if (items[index] == "repeat")
+          return "repeat"
+      }
+
+      return "press"
+    }
+
     {
-      identity = $11 "|" $2
+      identity = $11 "|" $2 "|" binding_event($12)
       count[identity]++
     }
     END {
@@ -349,10 +364,31 @@ show_duplicates() {
 
   duplicates="$(
     awk -F '\t' '
+      function binding_event(flags, item_count, items, index) {
+        item_count = split(flags, items, ",")
+
+        for (index = 1; index <= item_count; index++) {
+          if (items[index] == "long_press")
+            return "long_press"
+          if (items[index] == "release")
+            return "release"
+          if (items[index] == "repeat")
+            return "repeat"
+        }
+
+        return "press"
+      }
+
       {
-        identity = $11 "|" $2
+        identity = $11 "|" $2 "|" binding_event($12)
         count[identity]++
-        lines[identity] = lines[identity] sprintf("%-35s → %s%c", $2, $3, 10)
+        lines[identity] = lines[identity] sprintf(
+          "%-35s [%s] → %s%c",
+          $2,
+          binding_event($12),
+          $3,
+          10
+        )
       }
       END {
         for (identity in count) {
@@ -518,7 +554,7 @@ action_needs_argument() {
 }
 
 add_managed_draft() {
-  local identifier combo category description action argument output
+  local identifier combo category description action argument event output
 
   nest_clear
   nest_header "Atajos de teclado" "Nuevo borrador"
@@ -538,6 +574,16 @@ add_managed_draft() {
   action="$(choose_action)" || true
   [[ -n "$action" ]] || return 0
 
+  event="$(
+    gum choose \
+      press \
+      release \
+      repeat \
+      long_press \
+      --header "Evento"
+  )" || true
+  [[ -n "$event" ]] || return 0
+
   argument=""
   if action_needs_argument "$action"; then
     argument="$(gum input --placeholder "Argumento o comando")" || true
@@ -551,6 +597,7 @@ add_managed_draft() {
     --category "$category"
     --description "$description"
     --action "$action"
+    --event "$event"
   )
   [[ -z "$argument" ]] || arguments+=(--argument "$argument")
 
@@ -696,7 +743,15 @@ show_managed_record() {
         ;;
       "Cambiar evento")
         local new_event
-        new_event="$(gum choose "$event" press release repeat --header "Evento")" || true
+        new_event="$(
+          gum choose \
+            "$event" \
+            press \
+            release \
+            repeat \
+            long_press \
+            --header "Evento"
+        )" || true
         [[ -n "$new_event" ]] || continue
         run_editor set --id "$identifier" --event "$new_event"
         ;;

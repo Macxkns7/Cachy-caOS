@@ -24,7 +24,7 @@ DEFAULT_BACKUPS = MODULE_DIR / "backups"
 DEFAULT_TARGET = Path.home() / ".config/hypr/cachycaos/keybinds.lua"
 
 MODIFIER_ORDER = ("SUPER", "CTRL", "ALT", "SHIFT")
-VALID_EVENTS = {"press", "release", "repeat"}
+VALID_EVENTS = {"press", "release", "repeat", "long_press"}
 STATIC_ACTIONS = {
     "window.close",
     "window.float.toggle",
@@ -54,6 +54,8 @@ KEY_ALIASES = {
     "PISTA ANTERIOR": "XF86AudioPrev",
     "REPRODUCIR": "XF86AudioPlay",
     "PAUSA": "XF86AudioPause",
+    "CONTESTAR LLAMADA": "XF86PickupPhone",
+    "FINALIZAR LLAMADA": "XF86HangupPhone",
     "RUEDA ABAJO": "mouse_down",
     "RUEDA ARRIBA": "mouse_up",
     "CLIC IZQUIERDO": "mouse:272",
@@ -247,9 +249,13 @@ def validate_document(records: list[dict[str, Any]]) -> None:
 
         if record.get("enabled", True):
             combo = canonical_combo(combo_for(record))
-            if combo in enabled_combos:
-                fail(f"Combinación habilitada duplicada: {combo}")
-            enabled_combos.add(combo)
+            event_combo = f"{record.get('event', 'press')}:{combo}"
+            if event_combo in enabled_combos:
+                fail(
+                    "Combinación y evento habilitados duplicados: "
+                    f"{combo} [{record.get('event', 'press')}]"
+                )
+            enabled_combos.add(event_combo)
 
 
 def load_document(path: Path) -> list[dict[str, Any]]:
@@ -390,17 +396,23 @@ def conflicts_for(
             continue
 
         expected = canonical_combo(combo_for(record))
+        expected_event = record.get("event", "press")
 
         for row in rows:
             runtime_combo = canonical_combo(row[1])
+            runtime_event, _locked, _mouse = flags_from_text(row[11])
             origin = row[6]
 
-            if runtime_combo != expected:
+            if (
+                runtime_combo != expected
+                or runtime_event != expected_event
+            ):
                 continue
 
             if not is_managed_origin(origin, managed_target):
                 conflicts.append(
-                    f"{record['id']}: {combo_for(record)} ya existe en "
+                    f"{record['id']}: {combo_for(record)} "
+                    f"[{expected_event}] ya existe en "
                     f"{origin or 'runtime'}"
                 )
 
@@ -409,8 +421,14 @@ def conflicts_for(
 
 def flags_from_text(value: str) -> tuple[str, bool, bool]:
     flags = set(value.split(",")) if value and value != "-" else set()
-    event = "release" if "release" in flags else (
-        "repeat" if "repeat" in flags else "press"
+    event = (
+        "long_press"
+        if "long_press" in flags
+        else "release"
+        if "release" in flags
+        else "repeat"
+        if "repeat" in flags
+        else "press"
     )
     return event, "locked" in flags, "mouse" in flags
 

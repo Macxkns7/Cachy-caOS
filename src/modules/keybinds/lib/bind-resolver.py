@@ -36,6 +36,7 @@ class SourceBinding:
     description: str
     action_type: str
     argument: str
+    event: str
     source_path: str
     source_line: str
 
@@ -83,6 +84,10 @@ KEY_ALIASES = {
     "XF86AUDIOPLAY": "XF86AUDIOPLAY",
     "PAUSA": "XF86AUDIOPAUSE",
     "XF86AUDIOPAUSE": "XF86AUDIOPAUSE",
+    "CONTESTAR LLAMADA": "XF86PICKUPPHONE",
+    "XF86PICKUPPHONE": "XF86PICKUPPHONE",
+    "FINALIZAR LLAMADA": "XF86HANGUPPHONE",
+    "XF86HANGUPPHONE": "XF86HANGUPPHONE",
 
     # Ratón
     "RUEDA ABAJO": "MOUSE_DOWN",
@@ -220,9 +225,11 @@ def load_source(path: Path) -> list[SourceBinding]:
     bindings: list[SourceBinding] = []
 
     for number, row in enumerate(rows, start=1):
-        if len(row) != 7:
+        if len(row) == 7:
+            row.insert(5, "press")
+        elif len(row) != 8:
             raise ValueError(
-                f"{path}:{number}: se esperaban 7 columnas, "
+                f"{path}:{number}: se esperaban 7 u 8 columnas, "
                 f"pero llegaron {len(row)}."
             )
 
@@ -231,14 +238,27 @@ def load_source(path: Path) -> list[SourceBinding]:
     return bindings
 
 
+def event_from_flags(flags: str) -> str:
+    values = set(flags.split(",")) if flags and flags != "-" else set()
+
+    if "long_press" in values:
+        return "long_press"
+    if "release" in values:
+        return "release"
+    if "repeat" in values:
+        return "repeat"
+
+    return "press"
+
+
 def resolve(
     runtime_bindings: list[RuntimeBinding],
     source_bindings: list[SourceBinding],
 ) -> tuple[list[EnrichedBinding], list[RuntimeBinding], list[SourceBinding]]:
-    source_index: dict[str, list[SourceBinding]] = {}
+    source_index: dict[tuple[str, str], list[SourceBinding]] = {}
 
     for binding in source_bindings:
-        key = canonical_combo(binding.combo)
+        key = (canonical_combo(binding.combo), binding.event)
         source_index.setdefault(key, []).append(binding)
 
     enriched: list[EnrichedBinding] = []
@@ -246,7 +266,10 @@ def resolve(
     used_source_ids: set[int] = set()
 
     for runtime in runtime_bindings:
-        key = canonical_combo(runtime.combo)
+        key = (
+            canonical_combo(runtime.combo),
+            event_from_flags(runtime.flags),
+        )
         candidates = source_index.get(key, [])
 
         source = next(

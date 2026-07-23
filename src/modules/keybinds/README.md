@@ -2,7 +2,7 @@
 
 Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 
-## Alcance de v0.4
+## Alcance de v0.5
 
 - inventaría los bindings activos y sigue módulos Lua cargados con `require`;
 - tolera el JSON inválido de Hyprland 0.56 mediante fallback automático a
@@ -26,6 +26,10 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
   combinación todavía activa fuera del archivo administrado;
 - bloquea la habilitación y la aplicación si la combinación original continúa
   activa fuera del archivo administrado;
+- diferencia `press` y `long_press` sobre una misma tecla sin tratarlos como
+  una colisión;
+- detecta pulsaciones largas tanto desde el JSON como desde el fallback
+  textual de `hyprctl binds`;
 - conserva un respaldo independiente antes de cada cambio del manifiesto.
 
 N.E.S.T. sólo administra:
@@ -79,13 +83,13 @@ Cada `[[bind]]` admite:
 | `enabled` | `true` o `false` |
 | `modifiers` | `SUPER`, `CTRL`, `ALT`, `SHIFT` |
 | `key` | símbolo XKB o `code:<n>` validado con `wev` |
-| `event` | `press`, `release` o `repeat` |
+| `event` | `press`, `release`, `repeat` o `long_press` |
 | `locked` | permite uso con la sesión bloqueada |
 | `mouse` | marca bindings de mouse |
 | `action` | acción lógica soportada o `exec` |
 | `argument` | valor obligatorio para acciones parametrizadas |
 
-Las acciones administradas en v0.4 son:
+Las acciones administradas en v0.5 son:
 
 ```text
 exec
@@ -105,6 +109,11 @@ window.move
 `press` genera explícitamente `repeating = false`. La repetición nunca queda
 activada por omisión, especialmente en volumen y brillo.
 
+`long_press` genera `long_press = true` y puede convivir con un registro
+`press` que use la misma combinación. Esto permite asignar una acción a la
+pulsación breve y otra al mantener la tecla sin scripts ni temporizadores
+externos.
+
 ## Pruebas
 
 ```bash
@@ -117,7 +126,8 @@ observada en Hyprland 0.56 y valida la recuperación desde el formato textual.
 Además cubre atribución por archivo fuente, importación individual y masiva
 deshabilitada, IDs deterministas, idempotencia, cancelación atómica ante una
 acción incompatible, bloqueo global de colisiones externas, edición del
-manifiesto y los doce tipos de acciones administradas.
+manifiesto, los doce tipos de acciones administradas y la convivencia segura
+entre `press` y `long_press`.
 
 ## Flujo seguro de migración
 

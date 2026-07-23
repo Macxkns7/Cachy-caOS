@@ -102,7 +102,8 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Separación conceptual entre Core, módulos e interfaz.
 - ✅ Nest UI temprana disponible como TUI con Kitty y `gum`.
 - ✅ Módulo WebApps funcional.
-- ✅ Módulo Keybinds funcional en el sistema de desarrollo.
+- ✅ Módulo Keybinds v0.5 funcional: 55 atajos administrados y soporte
+  `long_press` implementado.
 - ✅ Noctalia Greeter identificado como primera integración externa administrada.
 - ✅ Patrón validado: instalación de aplicaciones separada de asociaciones MIME.
 - ✅ Patrón validado: overrides locales XDG en lugar de modificar archivos del sistema.
@@ -120,7 +121,9 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ⏳ Crear diagnóstico común y formato de resultados.
 - ⏳ Diseñar instalador y actualizador.
 - ⏳ Incorporar Launcher Policy, reconciliador XDG y plugin avanzado al árbol canónico.
-- ⏳ Incorporar Keybinds al árbol canónico de código fuente.
+- ✅ Keybinds incorporado al árbol canónico de código fuente.
+- 🟡 Validar en hardware las nuevas asignaciones F10/F11 y continuar la
+  interfaz del módulo.
 - ⏳ Importar el PNG maestro de Nest al repositorio.
 - ⏳ Iniciar una interfaz gráfica desacoplada de la shell.
 

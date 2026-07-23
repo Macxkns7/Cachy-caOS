@@ -1,6 +1,6 @@
 # Módulo Keybinds
 
-**Estado:** v0.4 operativa; migración masiva segura disponible
+**Estado:** v0.5 implementada; 55 atajos migrados y pulsación larga en prueba
 **Última revisión:** 2026-07-23
 
 ## Propósito
@@ -378,7 +378,8 @@ Captura completa            → funcional
 F9 / ayuda                  → Character Picker de Noctalia
 F12 / calculadora           → Galculator
 Cambio de pantalla          → pendiente de probar con monitor externo
-F10/F11 / llamadas          → pendiente de detectar y definir utilidad
+F10 / contestar llamada     → XF86PickupPhone; reproducir o pausar
+F11 / finalizar llamada     → XF86HangupPhone; siguiente / anterior al mantener
 ⭐ Special Key              → pendiente de detectar; candidata a notificaciones
 ```
 
@@ -429,7 +430,7 @@ Resultado comprobado:
 
 Regla para Nest:
 
-> La repetición no debe activarse por defecto en acciones incrementales peligrosas como volumen o brillo. El perfil debe declarar explícitamente si acepta `press`, `release` o `repeat` y mostrar la tasa efectiva antes de aplicar.
+> La repetición no debe activarse por defecto en acciones incrementales peligrosas como volumen o brillo. El perfil debe declarar explícitamente si acepta `press`, `release`, `repeat` o `long_press` y mostrar la tasa efectiva antes de aplicar.
 
 Respaldo validado:
 
@@ -639,7 +640,7 @@ Capacidades incorporadas:
   administrado;
 - una única escritura y un único respaldo por operación masiva.
 
-Flujo previsto para la migración real:
+Flujo completado en la migración real:
 
 ```text
 inventariar 55 atajos
@@ -654,6 +655,16 @@ inventariar 55 atajos
 → probar por categorías
 ```
 
+Resultado validado:
+
+- 55 registros en el manifiesto;
+- 55 atajos habilitados y cero borradores;
+- 55 bindings runtime atribuidos a
+  `~/.config/hypr/cachycaos/keybinds.lua`;
+- `hyprctl configerrors` sin errores;
+- comportamiento conservado en aplicaciones, ventanas, workspaces,
+  multimedia, brillo, capturas y teclas especiales.
+
 La interfaz expone las operaciones desde `Atajos administrados` mediante
 `Importar externos compatibles` y `Habilitar todos los borradores`. N.E.S.T.
 no retira por sí mismo las definiciones externas: esa transición continúa
@@ -667,12 +678,48 @@ escritura, IDs deterministas, idempotencia, rechazo atómico de acciones
 incompatibles, bloqueo de conflictos del lote y habilitación completa sólo
 cuando el origen externo ya fue retirado.
 
+## Hito v0.5: pulsaciones largas y teclas de llamada
+
+La auditoría con `wev` identificó las dos teclas telefónicas del Lenovo
+ThinkBook 13s G2:
+
+```text
+key 453 → XF86PickupPhone
+key 454 → XF86HangupPhone
+```
+
+La distribución definida es:
+
+```text
+XF86PickupPhone · press       → playerctl play-pause
+XF86HangupPhone · press       → playerctl next
+XF86HangupPhone · long_press  → playerctl previous
+```
+
+Se eligió `long_press` en lugar de doble pulsación porque Hyprland lo soporta
+de forma nativa. La doble pulsación requeriría mantener estado y temporizadores
+externos, además de retrasar la acción de pista siguiente.
+
+N.E.S.T. v0.5 incorpora:
+
+- `long_press` como cuarto evento del manifiesto;
+- generación de `long_press = true` en Lua;
+- detección de `longPress` en JSON y del sufijo `o` en la salida textual;
+- reconocimiento legible de las teclas de contestar y finalizar llamada;
+- convivencia válida entre `press` y `long_press` para una misma combinación;
+- conflictos externos comparados por combinación **y evento**;
+- creación y edición visual de registros con pulsación larga;
+- pruebas de generación, inventario, colisiones y regresión.
+
+El soporte de código está validado de forma aislada. La instalación de v0.5 y
+la prueba con las teclas físicas constituyen la validación operativa pendiente.
+
 ## Pendientes
 
 - ampliar el esquema con hardware, proveedor y evidencia de detección;
 - implementar resolución por adaptadores;
 - detectar y configurar la ⭐ Special Key;
-- auditar F10/F11 de llamadas;
+- instalar y validar las asignaciones F10/F11 de llamadas;
 - validar cambio de pantalla con monitor externo;
 - convertir `wev` en un asistente guiado;
 - inventariar dispositivos y teclas automáticamente;

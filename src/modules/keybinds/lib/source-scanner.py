@@ -19,6 +19,7 @@ class Binding:
     description: str
     action_type: str
     argument: str
+    event: str
     source_path: str
     source_line: int
 
@@ -293,6 +294,20 @@ def extract_call_arguments(call_text: str) -> tuple[str, str, str]:
     return parts[0], parts[1], parts[2]
 
 
+def event_from_options(options: str) -> str:
+    rules = (
+        (r"\blong_press\s*=\s*true\b", "long_press"),
+        (r"\brelease\s*=\s*true\b", "release"),
+        (r"\brepeating\s*=\s*true\b", "repeat"),
+    )
+
+    for pattern, event in rules:
+        if re.search(pattern, options):
+            return event
+
+    return "press"
+
+
 def collect_bind_calls(lines: list[str]) -> list[tuple[int, str]]:
     calls: list[tuple[int, str]] = []
     index = 0
@@ -406,8 +421,9 @@ def scan_single_config(path: Path) -> list[Binding]:
     calls = collect_bind_calls(lines)
 
     for line_number, call in calls:
-        key_expr, dispatcher_expr, _options = extract_call_arguments(call)
+        key_expr, dispatcher_expr, options = extract_call_arguments(call)
         category = category_by_line.get(line_number, "General")
+        event = event_from_options(options)
 
         if " .. key" in key_expr and "workspace = i" in dispatcher_expr:
             for i in range(1, 11):
@@ -432,6 +448,7 @@ def scan_single_config(path: Path) -> list[Binding]:
                         description=description,
                         action_type=action_type,
                         argument=str(i),
+                        event=event,
                         source_path=str(path.resolve()),
                         source_line=line_number,
                     )
@@ -452,6 +469,7 @@ def scan_single_config(path: Path) -> list[Binding]:
                 description=description,
                 action_type=action_type,
                 argument=argument,
+                event=event,
                 source_path=str(path.resolve()),
                 source_line=line_number,
             )
@@ -491,6 +509,7 @@ def write_tsv(bindings: list[Binding], output: Path) -> None:
                 binding.description,
                 binding.action_type,
                 binding.argument,
+                binding.event,
                 binding.source_path,
                 str(binding.source_line),
             ]
