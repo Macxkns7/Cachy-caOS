@@ -54,6 +54,7 @@ section + section {
 }
 
 dl,
+.routes,
 .windows {
   display: grid;
   gap: 7px;
@@ -61,6 +62,7 @@ dl,
 }
 
 dl div,
+.route,
 .window {
   background: #1b1228;
   border: 1px solid #36264d;
@@ -95,11 +97,14 @@ button {
   padding: 5px 9px;
 }
 
+.route strong,
+.route span,
 .window strong,
 .window span {
   display: block;
 }
 
+.route span,
 .window span {
   color: #c8bcdc;
   font-size: 11px;
