@@ -113,10 +113,10 @@ La prueba valida un futuro contrato Terminal Identity + Fastfetch Adapter. N.E.S
 
 Fuente: `docs/modulos/fastfetch-personalizable.md`.
 
-### WebApps v0.7 Beta + WebApp Router v0.2
+### WebApps v0.7 Beta + WebApp Router v0.3
 
-Estado: **WebApps funcional; mecanismo del Router validado con YouTube Music;
-registro multi-WebApp pendiente de validación real**.
+Estado: **WebApps funcional; registro multi-WebApp y activación entre
+workspaces validados en el sistema real**.
 
 Capacidades confirmadas:
 
@@ -138,6 +138,10 @@ Capacidades confirmadas:
 - exclusión individual mediante `X-CachycaOS-WebApp-Router=false`, pendiente
   de prueba en el sistema real;
 - conservación de la pestaña normal ante errores o destinos ambiguos.
+- reutilización real de ChatGPT, GitHub y YouTube Music;
+- generación de reglas Hyprland exactas desde `StartupWMClass`;
+- activación de una WebApp existente situada en otro workspace;
+- conservación de `misc.focus_on_activate=false` para el resto del sistema.
 
 Código fuente canónico:
 
@@ -146,6 +150,7 @@ src/bin/cachycaos-webapp
 src/bin/cachycaos-webapp-router
 src/modules/webapps/app.sh
 src/modules/webapps/router/
+~/.config/hypr/cachycaos/webapps.lua
 ```
 
 ## Estructura observada en el sistema de desarrollo
