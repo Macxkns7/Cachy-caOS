@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "N.E.S.T. WebApp Router",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Reutiliza ventanas WebApp existentes para enlaces administrados por N.E.S.T.",
   "minimum_chrome_version": "120",
   "permissions": [
