@@ -6,9 +6,12 @@ MODULE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_EXTENSION="$MODULE_DIR/extension"
 REGISTRY_GENERATOR="$MODULE_DIR/lib/registry.py"
 DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 APPLICATIONS_DIR="$DATA_HOME/applications"
 TARGET_DIR="$DATA_HOME/cachycaos/webapps/router-extension"
 BACKUP_DIR="$DATA_HOME/cachycaos/webapps/backups"
+HYPR_MAIN="$CONFIG_HOME/hypr/hyprland.lua"
+HYPR_TARGET="$CONFIG_HOME/hypr/cachycaos/webapps.lua"
 
 die() {
   echo "Error: $*" >&2
@@ -33,6 +36,22 @@ validate_sources() {
   fi
 }
 
+hyprland_loader_active() {
+  [[ -f "$HYPR_MAIN" ]] &&
+    grep -Eq \
+      '^[[:space:]]*require[[:space:]]*\([[:space:]]*["'\'']cachycaos[.]webapps["'\''][[:space:]]*\)' \
+      "$HYPR_MAIN"
+}
+
+reload_hyprland_if_integrated() {
+  hyprland_loader_active || return 0
+  command -v hyprctl >/dev/null 2>&1 || return 0
+  if ! hyprctl reload >/dev/null; then
+    echo "⚠ No se pudieron recargar las reglas de Hyprland." >&2
+  fi
+  return 0
+}
+
 sync_router() {
   local quiet=false
   local result state count
@@ -47,9 +66,13 @@ sync_router() {
   result="$(python3 "$REGISTRY_GENERATOR" \
     --applications "$APPLICATIONS_DIR" \
     --manifest-template "$SOURCE_EXTENSION/manifest.json" \
-    --output "$TARGET_DIR")"
+    --output "$TARGET_DIR" \
+    --hypr-output "$HYPR_TARGET")"
 
   IFS=$'\t' read -r state count <<< "$result"
+  if [[ "$state" == "changed" ]]; then
+    reload_hyprland_if_integrated
+  fi
 
   if [[ "$quiet" == true ]]; then
     printf '%s\t%s\n' "$state" "$count"
@@ -59,6 +82,12 @@ sync_router() {
   if [[ "$state" == "changed" ]]; then
     echo "✓ Registro actualizado: $count WebApp(s)"
     echo "  Recarga N.E.S.T. WebApp Router en vivaldi://extensions."
+    if hyprland_loader_active; then
+      echo "  Reglas de activación de Hyprland recargadas."
+    else
+      echo "  Para activar el foco entre workspaces, añade a hyprland.lua:"
+      echo '    require("cachycaos.webapps")'
+    fi
   else
     echo "✓ Registro al día: $count WebApp(s)"
   fi
@@ -97,6 +126,9 @@ install_router() {
   echo
   echo "Carga o recarga esta carpeta desde vivaldi://extensions:"
   echo "  $TARGET_DIR"
+  echo
+  echo "Comprueba que ~/.config/hypr/hyprland.lua contenga:"
+  echo '  require("cachycaos.webapps")'
 }
 
 uninstall_router() {
@@ -108,7 +140,14 @@ uninstall_router() {
   fi
 
   rm -rf -- "$TARGET_DIR"
+  mkdir -p "$(dirname -- "$HYPR_TARGET")"
+  cat > "$HYPR_TARGET" <<'LUA'
+-- N.E.S.T. WebApp Router is not installed.
+return true
+LUA
+  reload_hyprland_if_integrated
   echo "✓ Archivos del WebApp Router eliminados."
+  echo "✓ Reglas de activación de WebApps deshabilitadas."
   echo "  Retira también la extensión desde vivaldi://extensions."
 }
 
