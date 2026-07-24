@@ -1,7 +1,7 @@
 # Módulo WebApps
 
 **Estado:** En desarrollo y funcional  
-**Versión validada:** v0.7 Beta + WebApp Router v0.2
+**Versión validada:** v0.7 Beta + WebApp Router v0.3
 **Última revisión:** 2026-07-24
 
 ## Propósito
@@ -69,14 +69,14 @@ Rutas de ejecución y datos:
 - solicitar recarga del dock de Noctalia cuando está disponible.
 - sincronizar opcionalmente el registro de dominios del WebApp Router.
 
-## WebApp Router v0.2
+## WebApp Router v0.3
 
 La prueba real con la PWA nativa de YouTube Music confirmó que una extensión
 Manifest V3 puede recibir un enlace abierto mediante `xdg-open`, localizar la
 ventana WebApp existente, navegarla y enfocarla, y cerrar después la pestaña
 normal intermediaria.
 
-La versión v0.2 generaliza ese mecanismo:
+La implementación actual conserva y amplía ese mecanismo:
 
 1. descubre `cachycaos-webapp-*.desktop`;
 2. exige `X-CachycaOS-WebApp=true`;
@@ -85,7 +85,54 @@ La versión v0.2 generaliza ese mecanismo:
 5. elimina dominios duplicados;
 6. genera `routes.json`;
 7. genera permisos mínimos en `manifest.json`;
-8. sincroniza automáticamente al crear, reparar o eliminar una WebApp.
+8. genera reglas exactas de activación para Hyprland;
+9. sincroniza automáticamente al crear, reparar o eliminar una WebApp.
+
+La validación multi-WebApp confirmó el enrutamiento hacia ChatGPT, GitHub y
+YouTube Music sin duplicar ventanas. Cuando la WebApp de GitHub estaba en otro
+workspace, Vivaldi navegaba correctamente la ventana existente pero Hyprland no
+le entregaba el foco.
+
+### Activación entre workspaces
+
+La causa no estaba en el router: Hyprland exponía
+`misc.focus_on_activate=false`, su política global segura. La extensión podía
+activar la pestaña y solicitar foco para su ventana, pero el compositor evitaba
+el cambio de workspace.
+
+WebApp Router v0.3 genera:
+
+```text
+~/.config/hypr/cachycaos/webapps.lua
+```
+
+El archivo contiene una regla exacta por `StartupWMClass` administrado:
+
+```lua
+hl.window_rule({
+    name = "nest-webapp-github-focus",
+    match = {
+        class = "^vivaldi-github[.]com__-Default$",
+    },
+    focus_on_activate = true,
+})
+```
+
+La configuración principal solo debe cargar el adaptador:
+
+```lua
+require("cachycaos.webapps")
+```
+
+N.E.S.T. no cambia globalmente `misc.focus_on_activate`. Por ello una
+aplicación común no obtiene permiso para robar el foco; solamente las clases
+exactas derivadas de las WebApps registradas pueden activar su ventana y mover
+al usuario al workspace que la contiene.
+
+Al sincronizar el registro, el archivo Lua se regenera de forma idempotente. Si
+el `require` ya está activo y Hyprland está disponible, el módulo recarga el
+compositor. Al desinstalar el router, conserva un adaptador vacío para no dejar
+una importación rota.
 
 Una WebApp puede excluirse sin ser eliminada:
 
@@ -214,6 +261,11 @@ La reparación fue validada eliminando manualmente `StartupWMClass` de ChatGPT y
 - Persistencia tras recargar el dock.
 - Recuperación automática de una clave eliminada.
 - Ausencia de segunda instancia con engranaje.
+- Registro de seis dominios administrados con permisos mínimos.
+- Reutilización real de ChatGPT, GitHub y YouTube Music.
+- Navegación de GitHub dentro de una WebApp situada en otro workspace.
+- Cambio de workspace y foco mediante una regla exclusiva por clase.
+- Conservación de `misc.focus_on_activate=false` a nivel global.
 
 ## Lecciones de rutas e instalación
 
