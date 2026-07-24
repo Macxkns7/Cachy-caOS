@@ -6,6 +6,7 @@ import argparse
 import configparser
 import json
 import os
+import re
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlsplit
@@ -78,11 +79,17 @@ def parse_desktop(path: Path) -> dict[str, str] | None:
     origin = canonical_origin(raw_url)
     route_id = path.stem.removeprefix("cachycaos-webapp-")
     name = desktop_value(entry, "Name") or route_id
+    window_class = desktop_value(entry, "StartupWMClass")
+
+    if not window_class:
+        hostname = urlsplit(origin).hostname or ""
+        window_class = f"vivaldi-{hostname}__-Default"
 
     return {
         "id": route_id,
         "name": name,
         "origin": origin,
+        "window_class": window_class,
     }
 
 
@@ -109,6 +116,35 @@ def rendered_json(data: object) -> str:
         indent=2,
         sort_keys=False,
     ) + "\n"
+
+
+def exact_regex(value: str) -> str:
+    return "^" + re.sub(r"([.^$*+?{}\[\]\\|()])", r"\\\1", value) + "$"
+
+
+def rendered_hyprland_rules(routes: list[dict[str, str]]) -> str:
+    lines = [
+        "-- N.E.S.T. managed WebApp activation rules",
+        "-- Generated from cachycaos-webapp-*.desktop; do not edit manually.",
+        "",
+    ]
+
+    for route in routes:
+        rule_name = f"nest-webapp-{route['id']}-focus"
+        class_regex = exact_regex(route["window_class"])
+        lines.extend([
+            "hl.window_rule({",
+            f"    name = {json.dumps(rule_name, ensure_ascii=False)},",
+            "    match = {",
+            f"        class = {json.dumps(class_regex, ensure_ascii=False)},",
+            "    },",
+            "    focus_on_activate = true,",
+            "})",
+            "",
+        ])
+
+    lines.append("return true")
+    return "\n".join(lines) + "\n"
 
 
 def write_if_changed(path: Path, content: str) -> bool:
@@ -139,6 +175,7 @@ def build_registry(
     applications_dir: Path,
     manifest_template: Path,
     output_dir: Path,
+    hypr_output: Path | None = None,
 ) -> tuple[bool, list[dict[str, str]]]:
     routes = discover_routes(applications_dir)
     manifest = json.loads(manifest_template.read_text(encoding="utf-8"))
@@ -160,6 +197,11 @@ def build_registry(
         output_dir / "routes.json",
         rendered_json(registry),
     ) or changed
+    if hypr_output is not None:
+        changed = write_if_changed(
+            hypr_output,
+            rendered_hyprland_rules(routes),
+        ) or changed
 
     return changed, routes
 
@@ -171,12 +213,14 @@ def main() -> int:
     parser.add_argument("--applications", type=Path, required=True)
     parser.add_argument("--manifest-template", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--hypr-output", type=Path)
     args = parser.parse_args()
 
     changed, routes = build_registry(
         args.applications,
         args.manifest_template,
         args.output,
+        args.hypr_output,
     )
     state = "changed" if changed else "unchanged"
     print(f"{state}\t{len(routes)}")
