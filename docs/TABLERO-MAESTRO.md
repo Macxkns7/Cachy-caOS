@@ -102,6 +102,7 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Separación conceptual entre Core, módulos e interfaz.
 - ✅ Nest UI temprana disponible como TUI con Kitty y `gum`.
 - ✅ Módulo WebApps funcional.
+- 🧪 WebApp Router multi-sitio implementado; validación real ampliada pendiente.
 - ✅ Módulo Keybinds v0.5 funcional: 55 atajos administrados y soporte
   `long_press` implementado.
 - ✅ Noctalia Greeter identificado como primera integración externa administrada.
@@ -158,7 +159,9 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 
 ## WebApps e identidad de aplicaciones
 
-- ✅ WebApps v0.6 Beta funcional.
+- ✅ WebApps v0.7 Beta funcional.
+- ✅ Router validado con YouTube Music reutilizando una PWA existente.
+- 🧪 Registro dinámico multi-WebApp y permisos mínimos listos para prueba real.
 - ✅ Creación, listado, eliminación y reparación.
 - ✅ `StartupWMClass` generado para Vivaldi.
 - ✅ Agrupación correcta entre accesos fijados y ventanas Wayland.
