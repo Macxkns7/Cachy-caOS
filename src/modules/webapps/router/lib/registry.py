@@ -118,8 +118,14 @@ def rendered_json(data: object) -> str:
     ) + "\n"
 
 
-def exact_regex(value: str) -> str:
-    return "^" + re.sub(r"([.^$*+?{}\[\]\\|()])", r"\\\1", value) + "$"
+def vivaldi_route_class_regex(origin: str) -> str:
+    hostname = urlsplit(origin).hostname
+    if not hostname:
+        raise ValueError("el origen no contiene un dominio")
+
+    # Vivaldi/Chromium appends a route-derived suffix to --app window classes.
+    # Match only the registered hostname namespace while accepting that suffix.
+    return f"^vivaldi-{re.escape(hostname)}__.*-Default$"
 
 
 def rendered_hyprland_rules(routes: list[dict[str, str]]) -> str:
@@ -131,7 +137,7 @@ def rendered_hyprland_rules(routes: list[dict[str, str]]) -> str:
 
     for route in routes:
         rule_name = f"nest-webapp-{route['id']}-focus"
-        class_regex = exact_regex(route["window_class"])
+        class_regex = vivaldi_route_class_regex(route["origin"])
         lines.extend([
             "hl.window_rule({",
             f"    name = {json.dumps(rule_name, ensure_ascii=False)},",
