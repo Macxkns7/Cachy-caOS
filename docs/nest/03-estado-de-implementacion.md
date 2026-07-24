@@ -139,7 +139,8 @@ Capacidades confirmadas:
   de prueba en el sistema real;
 - conservación de la pestaña normal ante errores o destinos ambiguos.
 - reutilización real de ChatGPT, GitHub y YouTube Music;
-- generación de reglas Hyprland exactas desde `StartupWMClass`;
+- generación de reglas Hyprland ligadas al dominio exacto y tolerantes al
+  sufijo de ruta que Vivaldi añade a las clases `--app`;
 - activación de una WebApp existente situada en otro workspace;
 - conservación de `misc.focus_on_activate=false` para el resto del sistema.
 
