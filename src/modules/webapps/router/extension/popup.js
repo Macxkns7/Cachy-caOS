@@ -49,6 +49,36 @@ async function renderStatus() {
   addStatusRow(list, "Momento", lastStatus.at);
 }
 
+async function renderRoutes() {
+  const container = document.querySelector("#routes");
+  const response = await fetch(chrome.runtime.getURL("routes.json"), {
+    cache: "no-store",
+  });
+  const registry = await response.json();
+
+  container.replaceChildren();
+
+  if (!Array.isArray(registry.routes) || registry.routes.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "empty";
+    empty.textContent = "No hay WebApps administradas.";
+    container.append(empty);
+    return;
+  }
+
+  for (const route of registry.routes) {
+    const card = document.createElement("article");
+    const name = document.createElement("strong");
+    const origin = document.createElement("span");
+
+    card.className = "route";
+    name.textContent = route.name;
+    origin.textContent = route.origin;
+    card.append(name, origin);
+    container.append(card);
+  }
+}
+
 async function renderWindows() {
   const container = document.querySelector("#windows");
   const windows = await chrome.windows.getAll({ populate: true });
@@ -83,6 +113,7 @@ async function renderWindows() {
 
 async function refresh() {
   await Promise.all([
+    renderRoutes(),
     renderStatus(),
     renderWindows(),
   ]);
