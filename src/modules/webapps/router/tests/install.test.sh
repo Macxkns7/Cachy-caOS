@@ -20,6 +20,8 @@ APPLICATIONS="$XDG_DATA_HOME/applications"
 TARGET="$XDG_DATA_HOME/cachycaos/webapps/router-extension"
 HYPR_TARGET="$XDG_CONFIG_HOME/hypr/cachycaos/webapps.lua"
 COMMAND="$HOME/.local/bin/cachycaos-webapp-router"
+WEBAPPS_COMMAND="$HOME/.local/bin/cachycaos-webapp"
+WEBAPPS_MODULE="$XDG_DATA_HOME/cachycaos/modules/webapps/app.sh"
 FAKE_BIN="$TEMP_ROOT/bin"
 HYPR_LOG="$TEMP_ROOT/hyprctl.log"
 
@@ -57,6 +59,9 @@ DESKTOP
 bash "$ROOT/install.sh" >/dev/null
 
 [[ -x "$COMMAND" ]]
+[[ -x "$WEBAPPS_COMMAND" ]]
+[[ -x "$WEBAPPS_MODULE" ]]
+grep -Fq 'sync --quiet' "$WEBAPPS_MODULE"
 [[ -x "$XDG_DATA_HOME/cachycaos/modules/webapps/router/app.sh" ]]
 [[ -f "$TARGET/manifest.json" ]]
 [[ -f "$TARGET/routes.json" ]]
