@@ -25,6 +25,7 @@ def write_desktop(
     *,
     managed: bool = True,
     router_enabled: bool | None = None,
+    window_class: str | None = None,
 ) -> None:
     lines = [
         "[Desktop Entry]",
@@ -33,6 +34,9 @@ def write_desktop(
         f"X-CachycaOS-WebApp={'true' if managed else 'false'}",
         f"X-CachycaOS-WebApp-URL={url}",
     ]
+
+    if window_class is not None:
+        lines.append(f"StartupWMClass={window_class}")
 
     if router_enabled is not None:
         lines.append(
@@ -130,6 +134,7 @@ class RegistryTests(unittest.TestCase):
             root = Path(temporary)
             applications = root / "applications"
             output = root / "output"
+            hypr_output = root / "hypr" / "cachycaos" / "webapps.lua"
             applications.mkdir()
             output.mkdir()
 
@@ -138,6 +143,7 @@ class RegistryTests(unittest.TestCase):
                 "chatgpt",
                 "ChatGPT",
                 "https://chatgpt.com",
+                window_class="vivaldi-chatgpt.com__-Default",
             )
             write_desktop(
                 applications,
@@ -150,11 +156,13 @@ class RegistryTests(unittest.TestCase):
                 applications,
                 ROOT / "extension" / "manifest.json",
                 output,
+                hypr_output,
             )
             unchanged, _ = registry.build_registry(
                 applications,
                 ROOT / "extension" / "manifest.json",
                 output,
+                hypr_output,
             )
 
             manifest = json.loads(
@@ -176,6 +184,19 @@ class RegistryTests(unittest.TestCase):
             )
             self.assertEqual(generated["schema"], 1)
             self.assertEqual(len(generated["routes"]), 2)
+            hyprland_rules = hypr_output.read_text(encoding="utf-8")
+            self.assertIn(
+                'name = "nest-webapp-chatgpt-focus"',
+                hyprland_rules,
+            )
+            self.assertIn(
+                'class = "^vivaldi-chatgpt\\\\.com__-Default$"',
+                hyprland_rules,
+            )
+            self.assertEqual(
+                hyprland_rules.count("focus_on_activate = true"),
+                2,
+            )
 
 
 if __name__ == "__main__":
