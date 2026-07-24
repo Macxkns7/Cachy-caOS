@@ -1,8 +1,8 @@
 # Módulo WebApps
 
 **Estado:** En desarrollo y funcional  
-**Versión validada:** v0.6 Beta  
-**Última revisión:** 2026-07-16
+**Versión validada:** v0.7 Beta + WebApp Router v0.2
+**Última revisión:** 2026-07-24
 
 ## Propósito
 
@@ -13,6 +13,8 @@ Permitir crear, lanzar, listar, reparar y eliminar aplicaciones web integradas a
 ```text
 src/bin/cachycaos-webapp
 src/modules/webapps/app.sh
+src/bin/cachycaos-webapp-router
+src/modules/webapps/router/
 ```
 
 El futuro instalador debe desplegarlos como:
@@ -23,6 +25,12 @@ src/bin/cachycaos-webapp
 
 src/modules/webapps/app.sh
   → ~/.local/share/cachycaos/modules/webapps/app.sh
+
+src/bin/cachycaos-webapp-router
+  → ~/.local/bin/cachycaos-webapp-router
+
+src/modules/webapps/router/
+  → ~/.local/share/cachycaos/modules/webapps/router/
 ```
 
 ## Estado actual
@@ -59,6 +67,60 @@ Rutas de ejecución y datos:
 - regenerar o reemplazar `StartupWMClass` sin duplicarlo;
 - actualizar la base XDG de aplicaciones;
 - solicitar recarga del dock de Noctalia cuando está disponible.
+- sincronizar opcionalmente el registro de dominios del WebApp Router.
+
+## WebApp Router v0.2
+
+La prueba real con la PWA nativa de YouTube Music confirmó que una extensión
+Manifest V3 puede recibir un enlace abierto mediante `xdg-open`, localizar la
+ventana WebApp existente, navegarla y enfocarla, y cerrar después la pestaña
+normal intermediaria.
+
+La versión v0.2 generaliza ese mecanismo:
+
+1. descubre `cachycaos-webapp-*.desktop`;
+2. exige `X-CachycaOS-WebApp=true`;
+3. obtiene la URL desde `X-CachycaOS-WebApp-URL`;
+4. reduce cada URL a su origen canónico;
+5. elimina dominios duplicados;
+6. genera `routes.json`;
+7. genera permisos mínimos en `manifest.json`;
+8. sincroniza automáticamente al crear, reparar o eliminar una WebApp.
+
+Una WebApp puede excluirse sin ser eliminada:
+
+```ini
+X-CachycaOS-WebApp-Router=false
+```
+
+Las entradas antiguas que omiten esa clave participan por defecto.
+
+### Flujo de enrutamiento
+
+```text
+enlace externo
+→ Vivaldi crea una pestaña normal
+→ la extensión reconoce un origen registrado
+→ busca otra ventana popup/app del mismo origen
+→ navega y enfoca la WebApp existente
+→ cierra la pestaña intermediaria
+```
+
+Si el destino no existe, es ambiguo o produce un error, la pestaña normal
+permanece abierta.
+
+### Sincronización y permisos
+
+```bash
+cachycaos-webapp-router sync
+```
+
+El manifiesto solo solicita acceso a los dominios actualmente administrados.
+Cuando esos permisos cambian, Vivaldi debe recargar manualmente la extensión
+desde `vivaldi://extensions`.
+
+El router no modifica los manejadores globales HTTP/HTTPS y no usa Remote
+Debugging ni simulación de teclado.
 
 ## Flujo funcional
 
