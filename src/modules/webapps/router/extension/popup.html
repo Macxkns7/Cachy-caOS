@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>N.E.S.T. WebApp Router</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="eyebrow">N.E.S.T.</span>
+        <h1>WebApp Router</h1>
+        <p>Prototipo · YouTube Music</p>
+      </header>
+
+      <section>
+        <h2>Último evento</h2>
+        <dl id="status">
+          <div>
+            <dt>Estado</dt>
+            <dd>Esperando…</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section>
+        <div class="section-heading">
+          <h2>Ventanas visibles</h2>
+          <button id="refresh" type="button">Actualizar</button>
+        </div>
+        <div id="windows" class="windows"></div>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
