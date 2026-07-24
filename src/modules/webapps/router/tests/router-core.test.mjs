@@ -8,12 +8,31 @@ import {
   selectTarget,
 } from "../extension/router-core.mjs";
 
+const routes = [
+  {
+    id: "chatgpt",
+    name: "ChatGPT",
+    origin: "https://chatgpt.com",
+  },
+  {
+    id: "youtube-music",
+    name: "YouTube Music",
+    origin: "https://music.youtube.com",
+  },
+];
 const incomingUrl = "https://music.youtube.com/library/playlists";
 
-test("reconoce únicamente URLs de YouTube Music", () => {
-  assert.equal(matchRoute(incomingUrl)?.id, "youtube-music");
-  assert.equal(matchRoute("https://www.youtube.com/watch?v=123"), null);
-  assert.equal(matchRoute("not-a-url"), null);
+test("reconoce múltiples orígenes registrados", () => {
+  assert.equal(matchRoute(routes, incomingUrl)?.id, "youtube-music");
+  assert.equal(
+    matchRoute(routes, "https://chatgpt.com/c/123")?.id,
+    "chatgpt",
+  );
+  assert.equal(
+    matchRoute(routes, "https://www.youtube.com/watch?v=123"),
+    null,
+  );
+  assert.equal(matchRoute(routes, "not-a-url"), null);
 });
 
 test("considera popup y app como ventanas independientes", () => {
@@ -31,8 +50,11 @@ test("no confunde una pestaña normal con la WebApp", () => {
     },
   ];
 
-  assert.deepEqual(matchingAppTabs(windows, 10, incomingUrl), []);
-  assert.equal(selectTarget(windows, 10, incomingUrl), null);
+  assert.deepEqual(
+    matchingAppTabs(routes, windows, 10, incomingUrl),
+    [],
+  );
+  assert.equal(selectTarget(routes, windows, 10, incomingUrl), null);
 });
 
 test("selecciona una WebApp independiente y excluye el origen", () => {
@@ -52,7 +74,7 @@ test("selecciona una WebApp independiente y excluye el origen", () => {
     },
   ];
 
-  const target = selectTarget(windows, 10, incomingUrl);
+  const target = selectTarget(routes, windows, 10, incomingUrl);
 
   assert.equal(target?.window.id, 20);
   assert.equal(target?.tab.id, 200);
@@ -80,9 +102,32 @@ test("prefiere la ventana enfocada y después la más reciente", () => {
     },
   ];
 
-  assert.equal(selectTarget(windows, 99, incomingUrl)?.window.id, 30);
+  assert.equal(
+    selectTarget(routes, windows, 99, incomingUrl)?.window.id,
+    30,
+  );
 
   windows[1].focused = false;
 
-  assert.equal(selectTarget(windows, 99, incomingUrl)?.window.id, 30);
+  assert.equal(
+    selectTarget(routes, windows, 99, incomingUrl)?.window.id,
+    30,
+  );
+});
+
+test("no mezcla WebApps registradas con orígenes distintos", () => {
+  const windows = [
+    {
+      id: 10,
+      type: "normal",
+      tabs: [{ id: 100, url: incomingUrl }],
+    },
+    {
+      id: 20,
+      type: "popup",
+      tabs: [{ id: 200, url: "https://chatgpt.com/" }],
+    },
+  ];
+
+  assert.equal(selectTarget(routes, windows, 10, incomingUrl), null);
 });
