@@ -33,6 +33,8 @@ por compatibilidad.
 - solo considera pestañas recién creadas desde ventanas `normal`;
 - solo redirige hacia otra ventana `popup` o `app` del mismo origen;
 - navega y enfoca la WebApp antes de cerrar la pestaña intermediaria;
+- genera una regla `focus_on_activate` para cada clase WebApp exacta;
+- conserva `misc.focus_on_activate=false` para las demás aplicaciones;
 - ante ambigüedad o error conserva la pestaña original;
 - no modifica los manejadores HTTP/HTTPS;
 - no usa Remote Debugging ni automatización de teclado.
@@ -49,14 +51,16 @@ El instalador despliega:
 ~/.local/bin/cachycaos-webapp-router
 ~/.local/share/cachycaos/modules/webapps/router/
 ~/.local/share/cachycaos/webapps/router-extension/
+~/.config/hypr/cachycaos/webapps.lua
 ```
 
 Después:
 
-1. abrir `vivaldi://extensions`;
-2. activar **Modo desarrollador**;
-3. seleccionar **Cargar extensión sin empaquetar**;
-4. elegir `~/.local/share/cachycaos/webapps/router-extension`.
+1. añadir `require("cachycaos.webapps")` a `hyprland.lua`;
+2. abrir `vivaldi://extensions`;
+3. activar **Modo desarrollador**;
+4. seleccionar **Cargar extensión sin empaquetar**;
+5. elegir `~/.local/share/cachycaos/webapps/router-extension`.
 
 ## Sincronización
 
@@ -71,6 +75,11 @@ instalado.
 Los cambios de dominios alteran los permisos declarados en el manifiesto. Por
 esa razón Vivaldi debe recargar la extensión desde `vivaldi://extensions`
 después de una sincronización que informe cambios.
+
+El mismo comando regenera las reglas exactas de Hyprland a partir de
+`StartupWMClass`. Si el adaptador ya está cargado, Hyprland se recarga
+automáticamente. Esto permite enfocar una WebApp existente incluso cuando se
+encuentra en otro workspace, sin habilitar globalmente el robo de foco.
 
 ## Diagnóstico
 
