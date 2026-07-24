@@ -143,13 +143,22 @@ class RegistryTests(unittest.TestCase):
                 "chatgpt",
                 "ChatGPT",
                 "https://chatgpt.com",
-                window_class="vivaldi-chatgpt.com__-Default",
+                window_class="vivaldi-chatgpt.com__conversation-Default",
             )
             write_desktop(
                 applications,
                 "music",
                 "YouTube Music",
                 "https://music.youtube.com",
+            )
+            write_desktop(
+                applications,
+                "crunchyroll",
+                "Crunchyroll",
+                "https://www.crunchyroll.com/es/discover",
+                window_class=(
+                    "vivaldi-www.crunchyroll.com__es_discover-Default"
+                ),
             )
 
             changed, routes = registry.build_registry(
@@ -174,29 +183,45 @@ class RegistryTests(unittest.TestCase):
 
             self.assertTrue(changed)
             self.assertFalse(unchanged)
-            self.assertEqual(len(routes), 2)
+            self.assertEqual(len(routes), 3)
             self.assertEqual(
                 manifest["host_permissions"],
                 [
                     "https://chatgpt.com/*",
                     "https://music.youtube.com/*",
+                    "https://www.crunchyroll.com/*",
                 ],
             )
             self.assertEqual(generated["schema"], 1)
-            self.assertEqual(len(generated["routes"]), 2)
+            self.assertEqual(len(generated["routes"]), 3)
             hyprland_rules = hypr_output.read_text(encoding="utf-8")
             self.assertIn(
                 'name = "nest-webapp-chatgpt-focus"',
                 hyprland_rules,
             )
             self.assertIn(
-                'class = "^vivaldi-chatgpt\\\\.com__-Default$"',
+                'class = "^vivaldi-chatgpt\\\\.com__.*-Default$"',
+                hyprland_rules,
+            )
+            self.assertIn(
+                (
+                    'class = "^vivaldi-www\\\\.crunchyroll\\\\.com'
+                    '__.*-Default$"'
+                ),
                 hyprland_rules,
             )
             self.assertEqual(
                 hyprland_rules.count("focus_on_activate = true"),
-                2,
+                3,
             )
+
+    def test_focus_class_is_pinned_to_host_but_accepts_route_suffix(self) -> None:
+        self.assertEqual(
+            registry.vivaldi_route_class_regex(
+                "https://www.crunchyroll.com",
+            ),
+            r"^vivaldi-www\.crunchyroll\.com__.*-Default$",
+        )
 
 
 if __name__ == "__main__":
