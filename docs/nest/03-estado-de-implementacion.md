@@ -113,9 +113,10 @@ La prueba valida un futuro contrato Terminal Identity + Fastfetch Adapter. N.E.S
 
 Fuente: `docs/modulos/fastfetch-personalizable.md`.
 
-### WebApps v0.6 Beta
+### WebApps v0.7 Beta + WebApp Router v0.2
 
-Estado: **funcional y validado en el sistema real**.
+Estado: **WebApps funcional; mecanismo del Router validado con YouTube Music;
+registro multi-WebApp pendiente de validación real**.
 
 Capacidades confirmadas:
 
@@ -127,12 +128,24 @@ Capacidades confirmadas:
 - reparación idempotente sin duplicar claves;
 - actualización de la base XDG;
 - recarga opcional del dock de Noctalia.
+- enrutamiento validado de un enlace hacia una PWA existente;
+- registro automático desde Desktop Entries administradas, validado con
+  pruebas automatizadas;
+- permisos de extensión limitados a los dominios registrados, validados con
+  pruebas automatizadas;
+- sincronización idempotente al cambiar WebApps, validada en un entorno
+  aislado;
+- exclusión individual mediante `X-CachycaOS-WebApp-Router=false`, pendiente
+  de prueba en el sistema real;
+- conservación de la pestaña normal ante errores o destinos ambiguos.
 
 Código fuente canónico:
 
 ```text
 src/bin/cachycaos-webapp
+src/bin/cachycaos-webapp-router
 src/modules/webapps/app.sh
+src/modules/webapps/router/
 ```
 
 ## Estructura observada en el sistema de desarrollo
@@ -163,10 +176,12 @@ src/
 │   └── icons/
 │       └── README.md
 ├── bin/
-│   └── cachycaos-webapp
+│   ├── cachycaos-webapp
+│   └── cachycaos-webapp-router
 └── modules/
     └── webapps/
-        └── app.sh
+        ├── app.sh
+        └── router/
 ```
 
 La ubicación canónica reservada para el binario del icono es `src/assets/icons/nest-ui.png`. Su importación al repositorio continúa pendiente; el archivo actualmente validado reside en el sistema de desarrollo.
