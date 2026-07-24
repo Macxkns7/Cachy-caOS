@@ -106,13 +106,13 @@ WebApp Router v0.3 genera:
 ~/.config/hypr/cachycaos/webapps.lua
 ```
 
-El archivo contiene una regla exacta por `StartupWMClass` administrado:
+El archivo contiene una regla limitada al dominio exacto de cada WebApp:
 
 ```lua
 hl.window_rule({
     name = "nest-webapp-github-focus",
     match = {
-        class = "^vivaldi-github[.]com__-Default$",
+        class = "^vivaldi-github[.]com__.*-Default$",
     },
     focus_on_activate = true,
 })
@@ -125,9 +125,37 @@ require("cachycaos.webapps")
 ```
 
 N.E.S.T. no cambia globalmente `misc.focus_on_activate`. Por ello una
-aplicación común no obtiene permiso para robar el foco; solamente las clases
-exactas derivadas de las WebApps registradas pueden activar su ventana y mover
-al usuario al workspace que la contiene.
+aplicación común no obtiene permiso para robar el foco; solamente el espacio de
+clases del dominio exacto de cada WebApp registrada puede activar su ventana y
+mover al usuario al workspace que la contiene.
+
+### Rutas iniciales y clase de Vivaldi
+
+La prueba con Crunchyroll reveló una diferencia que no aparece en WebApps cuya
+URL inicial es la raíz del sitio:
+
+```text
+URL registrada: https://www.crunchyroll.com/es/discover
+StartupWMClass: vivaldi-www.crunchyroll.com__-Default
+Clase real:     vivaldi-www.crunchyroll.com__es_discover-Default
+```
+
+Vivaldi/Chromium incorpora la ruta inicial al sufijo de la clase de las
+ventanas `--app`. Una regla que copiara literalmente `StartupWMClass` podría
+enrutar correctamente el enlace, pero Hyprland no concedería foco a la ventana
+real.
+
+WebApp Router v0.3.1 genera por ello:
+
+```lua
+class = "^vivaldi-www[.]crunchyroll[.]com__.*-Default$"
+```
+
+El comodín no abarca otros sitios: el hostname permanece escapado, completo y
+anclado entre el prefijo `vivaldi-` y el separador `__`. Solamente varía el
+sufijo de ruta perteneciente al mismo dominio. La prueba real confirmó tanto la
+navegación dentro de la WebApp existente como el cambio al workspace que la
+contenía.
 
 Al sincronizar el registro, el archivo Lua se regenera de forma idempotente. Si
 el `require` ya está activo y Hyprland está disponible, el módulo recarga el
