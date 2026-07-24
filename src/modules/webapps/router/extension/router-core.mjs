@@ -1,14 +1,6 @@
-export const ROUTES = Object.freeze([
-  Object.freeze({
-    id: "youtube-music",
-    name: "YouTube Music",
-    origin: "https://music.youtube.com",
-  }),
-]);
-
 export const APP_WINDOW_TYPES = Object.freeze(["app", "popup"]);
 
-export function matchRoute(rawUrl) {
+export function matchRoute(routes, rawUrl) {
   let parsed;
 
   try {
@@ -17,15 +9,22 @@ export function matchRoute(rawUrl) {
     return null;
   }
 
-  return ROUTES.find((route) => parsed.origin === route.origin) ?? null;
+  return (routes ?? []).find(
+    (route) => parsed.origin === route?.origin,
+  ) ?? null;
 }
 
 export function isIndependentAppWindow(window) {
   return APP_WINDOW_TYPES.includes(window?.type);
 }
 
-export function matchingAppTabs(windows, sourceWindowId, rawUrl) {
-  const route = matchRoute(rawUrl);
+export function matchingAppTabs(
+  routes,
+  windows,
+  sourceWindowId,
+  rawUrl,
+) {
+  const route = matchRoute(routes, rawUrl);
 
   if (!route) {
     return [];
@@ -42,7 +41,7 @@ export function matchingAppTabs(windows, sourceWindowId, rawUrl) {
     }
 
     for (const tab of window.tabs ?? []) {
-      if (matchRoute(tab?.url)?.id !== route.id) {
+      if (matchRoute(routes, tab?.url)?.id !== route.id) {
         continue;
       }
 
@@ -57,8 +56,13 @@ export function matchingAppTabs(windows, sourceWindowId, rawUrl) {
   return matches;
 }
 
-export function selectTarget(windows, sourceWindowId, rawUrl) {
-  const matches = matchingAppTabs(windows, sourceWindowId, rawUrl);
+export function selectTarget(routes, windows, sourceWindowId, rawUrl) {
+  const matches = matchingAppTabs(
+    routes,
+    windows,
+    sourceWindowId,
+    rawUrl,
+  );
 
   if (matches.length === 0) {
     return null;
