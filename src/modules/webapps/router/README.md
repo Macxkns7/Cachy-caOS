@@ -33,7 +33,8 @@ por compatibilidad.
 - solo considera pestañas recién creadas desde ventanas `normal`;
 - solo redirige hacia otra ventana `popup` o `app` del mismo origen;
 - navega y enfoca la WebApp antes de cerrar la pestaña intermediaria;
-- genera una regla `focus_on_activate` para cada clase WebApp exacta;
+- genera una regla `focus_on_activate` limitada al dominio exacto de cada
+  WebApp y tolerante al sufijo de ruta de Vivaldi;
 - conserva `misc.focus_on_activate=false` para las demás aplicaciones;
 - ante ambigüedad o error conserva la pestaña original;
 - no modifica los manejadores HTTP/HTTPS;
@@ -82,10 +83,13 @@ Los cambios de dominios alteran los permisos declarados en el manifiesto. Por
 esa razón Vivaldi debe recargar la extensión desde `vivaldi://extensions`
 después de una sincronización que informe cambios.
 
-El mismo comando regenera las reglas exactas de Hyprland a partir de
-`StartupWMClass`. Si el adaptador ya está cargado, Hyprland se recarga
-automáticamente. Esto permite enfocar una WebApp existente incluso cuando se
-encuentra en otro workspace, sin habilitar globalmente el robo de foco.
+El mismo comando regenera las reglas de Hyprland a partir del dominio canónico
+de cada WebApp. La clase de una ventana `--app` puede incluir un sufijo derivado
+de su ruta inicial, por ejemplo `__es_discover-Default`; la regla fija el dominio
+exacto y admite únicamente esa parte variable. Si el adaptador ya está cargado,
+Hyprland se recarga automáticamente. Esto permite enfocar una WebApp existente
+incluso cuando se encuentra en otro workspace, sin habilitar globalmente el
+robo de foco.
 
 ## Diagnóstico
 
