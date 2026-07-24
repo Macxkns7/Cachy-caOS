@@ -74,10 +74,28 @@ find_browser() {
 }
 
 refresh_launchers() {
+  local router="$HOME/.local/bin/cachycaos-webapp-router"
+  local router_dir="$DATA_DIR/router-extension"
+  local sync_result state count
+
   update-desktop-database "$APP_DIR" >/dev/null 2>&1 || true
 
   if command -v noctalia >/dev/null 2>&1; then
     noctalia msg dock-reload >/dev/null 2>&1 || true
+  fi
+
+  if [[ -x "$router" && -d "$router_dir" ]]; then
+    if sync_result="$("$router" sync --quiet)"; then
+      IFS=$'\t' read -r state count <<< "$sync_result"
+
+      if [[ "$state" == "changed" ]]; then
+        echo "↻ WebApp Router actualizado: $count WebApp(s)."
+        echo "  Recarga la extensión en vivaldi://extensions."
+      fi
+    else
+      echo "⚠ No se pudo sincronizar WebApp Router:" >&2
+      echo "$sync_result" >&2
+    fi
   fi
 }
 
@@ -196,6 +214,7 @@ StartupNotify=true
 Categories=Network;WebBrowser;
 X-CachycaOS-WebApp=true
 X-CachycaOS-WebApp-URL=$url
+X-CachycaOS-WebApp-Router=true
 DESKTOP
 
   chmod +x "$desktop_file"
