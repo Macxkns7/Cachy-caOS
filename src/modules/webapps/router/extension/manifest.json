@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "N.E.S.T. WebApp Router · Prototype",
+  "version": "0.1.0",
+  "description": "Reutiliza una ventana WebApp existente para enlaces de YouTube Music.",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://music.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "N.E.S.T. WebApp Router",
+    "default_popup": "popup.html"
+  }
+}
