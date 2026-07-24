@@ -48,11 +48,17 @@ bash src/modules/webapps/router/install.sh
 El instalador despliega:
 
 ```text
+~/.local/bin/cachycaos-webapp
 ~/.local/bin/cachycaos-webapp-router
+~/.local/share/cachycaos/modules/webapps/app.sh
 ~/.local/share/cachycaos/modules/webapps/router/
 ~/.local/share/cachycaos/webapps/router-extension/
 ~/.config/hypr/cachycaos/webapps.lua
 ```
+
+La instalación del router actualiza también el módulo padre WebApps y conserva
+un respaldo de su versión anterior. Esta integración es necesaria para que
+crear, reparar o eliminar una WebApp ejecute automáticamente `sync --quiet`.
 
 Después:
 
