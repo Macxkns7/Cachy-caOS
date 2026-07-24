@@ -91,7 +91,7 @@ assert registry["routes"][0]["window_class"] == (
 PYTHON
 
 grep -Fq 'name = "nest-webapp-chatgpt-focus"' "$HYPR_TARGET"
-grep -Fq 'class = "^vivaldi-chatgpt\\.com__-Default$"' "$HYPR_TARGET"
+grep -Fq 'class = "^vivaldi-chatgpt\\.com__.*-Default$"' "$HYPR_TARGET"
 grep -Fq 'focus_on_activate = true' "$HYPR_TARGET"
 
 cat > "$APPLICATIONS/cachycaos-webapp-github.desktop" <<'DESKTOP'
