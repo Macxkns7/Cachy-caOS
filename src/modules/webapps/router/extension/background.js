@@ -7,6 +7,7 @@ const ROUTE_DELAY_MS = 180;
 const MAX_INCOMING_TAB_AGE_MS = 5000;
 const pendingTabs = new Set();
 const createdAtByTab = new Map();
+let registryPromise;
 
 function isoNow() {
   return new Date().toISOString();
@@ -21,22 +22,49 @@ async function saveStatus(status) {
   });
 }
 
-async function routeIncomingTab(tabId, rawUrl) {
-  const route = matchRoute(rawUrl);
-  const createdAt = createdAtByTab.get(tabId);
+async function loadRegistry() {
+  if (!registryPromise) {
+    registryPromise = fetch(chrome.runtime.getURL("routes.json"), {
+      cache: "no-store",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`No se pudo leer routes.json: ${response.status}`);
+        }
 
-  if (
-    !route ||
-    !createdAt ||
-    Date.now() - createdAt > MAX_INCOMING_TAB_AGE_MS ||
-    pendingTabs.has(tabId)
-  ) {
-    return;
+        return response.json();
+      })
+      .then((registry) => {
+        if (registry?.schema !== 1 || !Array.isArray(registry.routes)) {
+          throw new Error("El registro de WebApps no es válido.");
+        }
+
+        return registry;
+      });
   }
 
-  pendingTabs.add(tabId);
+  return registryPromise;
+}
+
+async function routeIncomingTab(tabId, rawUrl) {
+  let route;
 
   try {
+    const registry = await loadRegistry();
+    route = matchRoute(registry.routes, rawUrl);
+    const createdAt = createdAtByTab.get(tabId);
+
+    if (
+      !route ||
+      !createdAt ||
+      Date.now() - createdAt > MAX_INCOMING_TAB_AGE_MS ||
+      pendingTabs.has(tabId)
+    ) {
+      return;
+    }
+
+    pendingTabs.add(tabId);
+
     await new Promise((resolve) => setTimeout(resolve, ROUTE_DELAY_MS));
 
     const sourceTab = await chrome.tabs.get(tabId);
@@ -54,7 +82,12 @@ async function routeIncomingTab(tabId, rawUrl) {
     }
 
     const windows = await chrome.windows.getAll({ populate: true });
-    const target = selectTarget(windows, sourceWindow.id, rawUrl);
+    const target = selectTarget(
+      registry.routes,
+      windows,
+      sourceWindow.id,
+      rawUrl,
+    );
 
     if (!target) {
       await saveStatus({
@@ -90,7 +123,7 @@ async function routeIncomingTab(tabId, rawUrl) {
   } catch (error) {
     await saveStatus({
       outcome: "error",
-      route: route.id,
+      route: route?.id,
       message: error instanceof Error ? error.message : String(error),
       url: rawUrl,
     });
@@ -131,8 +164,13 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  void saveStatus({
-    outcome: "ready",
-    message: "Prototipo preparado para YouTube Music.",
-  });
+  void loadRegistry()
+    .then((registry) => saveStatus({
+      outcome: "ready",
+      message: `${registry.routes.length} WebApp(s) registrada(s).`,
+    }))
+    .catch((error) => saveStatus({
+      outcome: "error",
+      message: error instanceof Error ? error.message : String(error),
+    }));
 });
