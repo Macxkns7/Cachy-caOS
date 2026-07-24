@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -169,6 +170,38 @@ def parse_text(raw: str) -> list[RuntimeBind]:
     return binds
 
 
+def parse_long_press_flags(raw: str) -> list[bool]:
+    """Recover longPress flags from Hyprland's malformed 0.56 JSON.
+
+    Some 0.56 builds emit invalid JSON for `hyprctl binds -j`, but the
+    longPress booleans and record order remain intact.  The textual fallback
+    contains the correct keys and descriptions, yet omits the long-press
+    attribute.  Combining both representations preserves the useful parts of
+    each without attempting to repair the corrupted JSON.
+    """
+
+    return [
+        value == "true"
+        for value in re.findall(
+            r'"longPress"\s*:\s*(true|false)',
+            raw,
+        )
+    ]
+
+
+def overlay_long_press_flags(
+    binds: list[RuntimeBind],
+    flags: list[bool],
+) -> tuple[list[RuntimeBind], bool]:
+    if not flags or len(flags) != len(binds):
+        return binds, False
+
+    return [
+        replace(bind, long_press=long_press)
+        for bind, long_press in zip(binds, flags, strict=True)
+    ], True
+
+
 def modifier_text(mask: int) -> str:
     parts = [name for bit, name in MODIFIERS if mask & bit]
     return " + ".join(parts) if parts else "SIN MODIFICADOR"
@@ -246,12 +279,15 @@ def render(bind: RuntimeBind) -> str:
 
 def discover(hyprctl: str) -> tuple[list[RuntimeBind], str]:
     json_result = run([hyprctl, "binds", "-j"])
+    long_press_flags: list[bool] = []
 
     if json_result.returncode == 0:
         try:
             return parse_json(json_result.stdout), "json"
         except (json.JSONDecodeError, ValueError):
-            pass
+            long_press_flags = parse_long_press_flags(
+                json_result.stdout,
+            )
 
     text_result = run([hyprctl, "binds"])
 
@@ -264,7 +300,12 @@ def discover(hyprctl: str) -> tuple[list[RuntimeBind], str]:
     if not binds:
         raise RuntimeError("hyprctl binds no entregó atajos reconocibles")
 
-    return binds, "text"
+    binds, recovered_flags = overlay_long_press_flags(
+        binds,
+        long_press_flags,
+    )
+    source_format = "text+json-flags" if recovered_flags else "text"
+    return binds, source_format
 
 
 def main() -> int:

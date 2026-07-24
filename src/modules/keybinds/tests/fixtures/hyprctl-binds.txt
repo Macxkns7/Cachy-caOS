@@ -28,7 +28,7 @@ bindle
 	dispatcher: __lua
 	arg: 83
 
-bindo
+bindld
 	modmask: 0
 	submap:
 	key: XF86HangupPhone

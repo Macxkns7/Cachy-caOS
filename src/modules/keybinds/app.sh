@@ -518,6 +518,7 @@ choose_action() {
   local current="${1:-}"
   local actions=(
     exec
+    helper
     window.close
     window.float.toggle
     window.pseudo
@@ -544,7 +545,7 @@ choose_action() {
 
 action_needs_argument() {
   case "$1" in
-    exec|layout|focus|workspace.focus|workspace.special|window.move)
+    exec|helper|layout|focus|workspace.focus|workspace.special|window.move)
       return 0
       ;;
     *)

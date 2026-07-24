@@ -102,8 +102,8 @@ El foco puede cambiar al inicio de una sesión, pero debe quedar registrado aqu�
 - ✅ Separación conceptual entre Core, módulos e interfaz.
 - ✅ Nest UI temprana disponible como TUI con Kitty y `gum`.
 - ✅ Módulo WebApps funcional.
-- ✅ Módulo Keybinds v0.5 funcional: 55 atajos administrados y soporte
-  `long_press` implementado.
+- ✅ Módulo Keybinds v0.6 funcional: 55 atajos administrados, callbacks Lua
+  reconciliados y teclas telefónicas validadas con toque simple/doble.
 - ✅ Noctalia Greeter identificado como primera integración externa administrada.
 - ✅ Patrón validado: instalación de aplicaciones separada de asociaciones MIME.
 - ✅ Patrón validado: overrides locales XDG en lugar de modificar archivos del sistema.

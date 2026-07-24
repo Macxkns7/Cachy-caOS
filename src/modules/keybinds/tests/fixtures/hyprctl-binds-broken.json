@@ -1,13 +1,27 @@
 [
 {
-    "locked": false,
-    "modmask": false,
-    "submap": "64",
-    "key": "false",
+    "longPress": false,
     "keycode": Q,
-    "description": "false",
     "allow_input_capture": ,
-    "dispatcher": "__lua",
-    "arg": "5"
+},
+{
+    "longPress": false,
+    "keycode": SUPER_L,
+    "allow_input_capture": ,
+},
+{
+    "longPress": false,
+    "keycode": XF86AudioRaiseVolume,
+    "allow_input_capture": ,
+},
+{
+    "longPress": true,
+    "keycode": XF86HangupPhone,
+    "allow_input_capture": Pista anterior con pulsación larga,
+},
+{
+    "longPress": false,
+    "keycode": XF86HangupPhone,
+    "allow_input_capture": Siguiente pista,
 }
 ]

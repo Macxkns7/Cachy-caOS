@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case "${1:-}" in
+  eval)
+    printf '%s\n' "${2:-}" >> "${HYPRCTL_LOG:?}"
+    echo "ok"
+    ;;
+  configerrors)
+    exit 0
+    ;;
+  *)
+    exit 1
+    ;;
+esac

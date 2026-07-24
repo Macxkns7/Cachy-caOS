@@ -35,6 +35,7 @@ STATIC_ACTIONS = {
 }
 ARGUMENT_ACTIONS = {
     "exec",
+    "helper",
     "layout",
     "focus",
     "workspace.focus",
@@ -222,6 +223,13 @@ def validate_record(record: dict[str, Any], number: int) -> None:
     if action in ARGUMENT_ACTIONS:
         if not isinstance(argument, str) or not argument.strip():
             fail(f"bind #{number}: '{action}' requiere argument.")
+        if action == "helper" and not re.fullmatch(
+            r"[A-Za-z0-9._-]+",
+            argument,
+        ):
+            fail(
+                f"bind #{number}: helper no válido '{argument}'."
+            )
     elif argument is not None:
         fail(f"bind #{number}: '{action}' no acepta argument.")
 

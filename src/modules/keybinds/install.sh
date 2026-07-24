@@ -9,7 +9,7 @@ BIN="$HOME/.local/bin"
 
 mkdir -p "$MODULE" "$MODULE/data" "$BIN"
 
-for directory in build lib; do
+for directory in build helpers lib; do
   mkdir -p "$MODULE/$directory"
   cp -a "$SOURCE/$directory/." "$MODULE/$directory/"
 done
@@ -22,6 +22,7 @@ else
 fi
 
 chmod 755 "$MODULE"/lib/*.py
+chmod 755 "$MODULE"/helpers/*
 
 install -m 755 "$SOURCE/app.sh" "$MODULE/app.sh"
 install -m 755 \

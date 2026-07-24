@@ -20,6 +20,16 @@ description = "Cerrar"
 action = "window.close"
 
 [[bind]]
+id = "action.helper"
+enabled = true
+modifiers = ["SUPER"]
+key = "H"
+category = "Multimedia"
+description = "Ayudante administrado"
+action = "helper"
+argument = "nest-media-hangup"
+
+[[bind]]
 id = "action.float"
 enabled = true
 modifiers = ["SUPER"]

@@ -22,6 +22,8 @@ DEFAULT_DATA = MODULE_DIR / "data/binds.toml"
 DEFAULT_BUILD = MODULE_DIR / "build/keybinds.lua"
 DEFAULT_TARGET = Path.home() / ".config/hypr/cachycaos/keybinds.lua"
 DEFAULT_BACKUPS = MODULE_DIR / "backups"
+HELPERS_DIR = MODULE_DIR / "helpers"
+LUA_MODULE = "cachycaos.keybinds"
 
 VALID_MODIFIERS = {"SUPER", "CTRL", "ALT", "SHIFT"}
 
@@ -39,6 +41,7 @@ ACTION_MAP = {
 }
 
 ARGUMENT_ACTIONS = {
+    "helper",
     "layout",
     "focus",
     "workspace.focus",
@@ -174,6 +177,15 @@ def parse_bind(
             )
 
         argument = argument.strip()
+
+        if action == "helper" and not re.fullmatch(
+            r"[A-Za-z0-9._-]+",
+            argument,
+        ):
+            fail(
+                f"bind #{bind_number}: helper no válido "
+                f"'{argument}'."
+            )
     elif argument is not None:
         fail(
             f"bind #{bind_number}: '{action}' no acepta argument."
@@ -248,6 +260,11 @@ def render_dispatcher(bind: Bind) -> str:
     if bind.action == "exec":
         assert bind.argument is not None
         return f"hl.dsp.exec_cmd({lua_quote(bind.argument)})"
+
+    if bind.action == "helper":
+        assert bind.argument is not None
+        helper = HELPERS_DIR / bind.argument
+        return f"hl.dsp.exec_cmd({lua_quote(str(helper))})"
 
     if bind.action in ACTION_MAP:
         return ACTION_MAP[bind.action]
@@ -415,11 +432,64 @@ def show_plan(target: Path, content: str) -> bool:
     return True
 
 
-def validate_hyprland() -> tuple[bool, str]:
-    reload_result = run_command(["hyprctl", "reload"])
+def extract_generated_combos(content: str) -> set[str]:
+    pattern = re.compile(
+        r'hl\.bind\(\s*"((?:\\.|[^"\\])*)"\s*,',
+        re.MULTILINE,
+    )
+    combos: set[str] = set()
 
-    if reload_result.returncode != 0:
-        return False, reload_result.stderr or reload_result.stdout
+    for match in pattern.finditer(content):
+        encoded = match.group(1)
+        combo = (
+            encoded
+            .replace(r"\n", "\n")
+            .replace(r"\"", '"')
+            .replace(r"\\", "\\")
+        )
+        combos.add(combo)
+
+    return combos
+
+
+def eval_failed(result: subprocess.CompletedProcess[str]) -> bool:
+    message = "\n".join((result.stdout, result.stderr))
+    error_line = any(
+        line.strip().lower().startswith(("error", "failed"))
+        for line in message.splitlines()
+    )
+    return result.returncode != 0 or error_line
+
+
+def reconcile_hyprland(
+    previous_content: str,
+    current_content: str,
+    load_module: bool = True,
+) -> tuple[bool, str]:
+    combos = sorted(
+        extract_generated_combos(previous_content)
+        | extract_generated_combos(current_content)
+    )
+    statements = [
+        f"hl.unbind({lua_quote(combo)})"
+        for combo in combos
+    ]
+
+    if load_module:
+        statements.extend(
+            [
+                f"package.loaded[{lua_quote(LUA_MODULE)}] = nil",
+                f"require({lua_quote(LUA_MODULE)})",
+            ]
+        )
+
+    if statements:
+        eval_result = run_command(
+            ["hyprctl", "eval", "\n".join(statements)]
+        )
+
+        if eval_failed(eval_result):
+            return False, eval_result.stderr or eval_result.stdout
 
     errors = run_command(["hyprctl", "configerrors"])
     message = errors.stderr or errors.stdout
@@ -499,28 +569,41 @@ def main() -> int:
             if not backup.is_file():
                 fail(f"Respaldo inexistente: {backup}")
 
+            previous_content = (
+                args.target.read_text(encoding="utf-8")
+                if args.target.exists()
+                else ""
+            )
             current_backup = install_file(
                 backup,
                 args.target,
                 args.backups,
             )
+            restored_content = args.target.read_text(encoding="utf-8")
             print(f"✓ Respaldo restaurado: {backup}")
 
             if current_backup:
                 print(f"✓ Estado anterior preservado: {current_backup}")
 
             if args.reload:
-                valid, message = validate_hyprland()
+                valid, message = reconcile_hyprland(
+                    previous_content,
+                    restored_content,
+                )
 
                 if not valid:
                     restore_install(args.target, current_backup)
-                    run_command(["hyprctl", "reload"])
+                    reconcile_hyprland(
+                        restored_content,
+                        previous_content,
+                        load_module=bool(previous_content),
+                    )
                     fail(
                         "Hyprland rechazó el rollback; se restauró "
                         f"el estado previo.\n{message.strip()}"
                     )
 
-                print("✓ Hyprland recargado sin errores")
+                print("✓ Runtime de Hyprland reconciliado sin errores")
 
             return 0
 
@@ -550,6 +633,11 @@ def main() -> int:
             print("✓ Destino sincronizado con el manifiesto")
 
         backup = None
+        previous_content = (
+            args.target.read_text(encoding="utf-8")
+            if args.target.exists()
+            else ""
+        )
 
         if args.install:
             backup = install_file(
@@ -564,17 +652,24 @@ def main() -> int:
                 print(f"✓ Respaldo: {backup}")
 
         if args.reload:
-            valid, message = validate_hyprland()
+            valid, message = reconcile_hyprland(
+                previous_content,
+                content,
+            )
 
             if not valid:
                 restore_install(args.target, backup)
-                run_command(["hyprctl", "reload"])
+                reconcile_hyprland(
+                    content,
+                    previous_content,
+                    load_module=bool(previous_content),
+                )
                 fail(
                     "Hyprland rechazó el cambio; se restauró "
                     f"automáticamente el estado previo.\n{message.strip()}"
                 )
 
-            print("✓ Hyprland recargado sin errores")
+            print("✓ Runtime de Hyprland reconciliado sin errores")
 
     except (OSError, ValueError, tomllib.TOMLDecodeError) as error:
         print(f"Error: {error}", file=sys.stderr)
