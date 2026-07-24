@@ -18,6 +18,9 @@ trap cleanup EXIT
 python3 -m py_compile "$ROOT"/lib/*.py
 
 chmod +x "$ROOT/tests/fixtures/hyprctl-runtime"
+chmod +x \
+  "$ROOT/tests/fixtures/hyprctl-reconcile" \
+  "$ROOT/tests/fixtures/playerctl-log"
 
 python3 "$ROOT/lib/runtime-scanner.py" \
   --hyprctl "$ROOT/tests/fixtures/hyprctl-runtime" \
@@ -27,7 +30,7 @@ test "$(wc -l < "$TEMP/runtime.tsv")" -eq 5
 grep -q $'SUPER + Q\t' "$TEMP/runtime.tsv"
 grep -q $'SUPER + SUPER_L\t.*\trelease$' "$TEMP/runtime.tsv"
 grep -q $'SUBIR VOLUMEN\t.*\tlocked,repeat$' "$TEMP/runtime.tsv"
-grep -q $'FINALIZAR LLAMADA\t.*\tlong_press$' "$TEMP/runtime.tsv"
+grep -q $'FINALIZAR LLAMADA\t.*\tlocked,long_press$' "$TEMP/runtime.tsv"
 grep -q $'FINALIZAR LLAMADA\t.*\t-$' "$TEMP/runtime.tsv"
 
 test "$(
@@ -121,6 +124,9 @@ python3 "$GENERATOR" \
   --build "$TEMP/actions.lua"
 
 grep -q 'hl.dsp.exec_cmd("kitty")' "$TEMP/actions.lua"
+grep -q \
+  '/.local/share/cachycaos/modules/keybinds/helpers/nest-media-hangup")' \
+  "$TEMP/actions.lua"
 grep -q 'hl.dsp.window.close()' "$TEMP/actions.lua"
 grep -q 'hl.dsp.window.float({ action = "toggle" })' "$TEMP/actions.lua"
 grep -q 'hl.dsp.window.pseudo()' "$TEMP/actions.lua"
@@ -132,6 +138,32 @@ grep -q 'hl.dsp.focus({ direction = "left" })' "$TEMP/actions.lua"
 grep -q 'hl.dsp.focus({ workspace = "1" })' "$TEMP/actions.lua"
 grep -q 'hl.dsp.workspace.toggle_special("magic")' "$TEMP/actions.lua"
 grep -q 'hl.dsp.window.move({ workspace = "1" })' "$TEMP/actions.lua"
+
+HELPER="$ROOT/helpers/nest-media-hangup"
+PLAYERCTL_FIXTURE="$ROOT/tests/fixtures/playerctl-log"
+chmod +x "$HELPER"
+
+mkdir -p "$TEMP/single-runtime"
+PLAYERCTL_LOG="$TEMP/single-playerctl.log" \
+NEST_PLAYERCTL_BIN="$PLAYERCTL_FIXTURE" \
+XDG_RUNTIME_DIR="$TEMP/single-runtime" \
+  "$HELPER"
+grep -qx 'next' "$TEMP/single-playerctl.log"
+
+mkdir -p "$TEMP/double-runtime"
+PLAYERCTL_LOG="$TEMP/double-playerctl.log" \
+NEST_PLAYERCTL_BIN="$PLAYERCTL_FIXTURE" \
+XDG_RUNTIME_DIR="$TEMP/double-runtime" \
+  "$HELPER" &
+first_tap_pid=$!
+sleep 0.05
+PLAYERCTL_LOG="$TEMP/double-playerctl.log" \
+NEST_PLAYERCTL_BIN="$PLAYERCTL_FIXTURE" \
+XDG_RUNTIME_DIR="$TEMP/double-runtime" \
+  "$HELPER"
+wait "$first_tap_pid"
+grep -qx 'previous' "$TEMP/double-playerctl.log"
+test "$(wc -l < "$TEMP/double-playerctl.log")" -eq 1
 
 cp "$ROOT/data/binds.toml" "$TEMP/editor.toml"
 install -m 644 /dev/null "$TEMP/empty-inventory.tsv"
@@ -313,5 +345,32 @@ if PATH="$TEMP/bin:$PATH" python3 "$GENERATOR" \
 fi
 
 grep -qx -- '-- estado anterior válido' "$TEMP/target.lua"
+
+cat > "$TEMP/old-managed.lua" <<'LUA'
+hl.bind(
+    "SUPER + X",
+    hl.dsp.exec_cmd("old-command"),
+    { description = "Anterior" }
+)
+return true
+LUA
+
+cp "$ROOT/tests/fixtures/hyprctl-reconcile" "$TEMP/bin/hyprctl"
+chmod +x "$TEMP/bin/hyprctl"
+
+HYPRCTL_LOG="$TEMP/hyprctl-eval.log" \
+PATH="$TEMP/bin:$PATH" \
+python3 "$GENERATOR" \
+  --data "$FIXTURE" \
+  --build "$TEMP/reconciled.lua" \
+  --target "$TEMP/old-managed.lua" \
+  --backups "$TEMP/reconcile-backups" \
+  --install --reload
+
+grep -q 'hl.unbind("SUPER + X")' "$TEMP/hyprctl-eval.log"
+grep -q 'hl.unbind("XF86HangupPhone")' "$TEMP/hyprctl-eval.log"
+grep -Fq 'package.loaded["cachycaos.keybinds"] = nil' \
+  "$TEMP/hyprctl-eval.log"
+grep -Fq 'require("cachycaos.keybinds")' "$TEMP/hyprctl-eval.log"
 
 echo "✓ Pruebas del módulo Keybinds completadas"

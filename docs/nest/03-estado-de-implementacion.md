@@ -1,7 +1,7 @@
 # Estado de implementación de Nest
 
 **Estado:** En desarrollo  
-**Última revisión:** 2026-07-23
+**Última revisión:** 2026-07-24
 
 ## Propósito
 
@@ -31,10 +31,11 @@ Nest se encuentra en una etapa temprana de construcción, pero ya dejó de ser u
 
 Ambos módulos han sido probados de forma independiente y desde el lanzador principal.
 
-### Keybinds v0.5
+### Keybinds v0.6
 
-Estado: **los 55 atajos del sistema están administrados y validados; soporte
-para pulsación larga implementado y pendiente de prueba física**.
+Estado: **los 55 atajos del sistema están administrados y validados; las
+teclas telefónicas fueron probadas físicamente y el runtime Lua se reconcilia
+con el manifiesto al aplicar cambios**.
 
 Capacidades confirmadas:
 
@@ -51,12 +52,21 @@ Capacidades confirmadas:
   volumen, brillo, capturas y teclas especiales;
 - eventos `press` y `long_press` compatibles sobre una misma tecla;
 - detección de `XF86PickupPhone` y `XF86HangupPhone` con nombres legibles;
+- recuperación de `longPress` desde el JSON corrupto de Hyprland 0.56 y
+  correlación con su salida textual;
+- evidencia de que `ideapad-extra-buttons` libera `XF86HangupPhone` en el mismo
+  instante de la pulsación y no permite mantenerla;
+- acción `helper` con rutas absolutas independientes del `PATH` de Hyprland;
+- toque simple para pista siguiente y doble toque para pista anterior;
+- invalidación de `package.loaded`, retiro de callbacks anteriores y carga del
+  módulo nuevo durante `apply`;
 - generación validada de los doce tipos de acción usados en el sistema;
 - respaldo, diff, recarga, verificación y rollback automático.
 
-La siguiente validación operativa asignará `XF86PickupPhone` a reproducir o
-pausar y `XF86HangupPhone` a pista siguiente con pulsación breve y pista
-anterior con pulsación larga.
+La validación operativa final asignó `XF86PickupPhone` a reproducir o pausar y
+`XF86HangupPhone` a pista siguiente con un toque o pista anterior con doble
+toque. Ambas acciones funcionan con reproducción MPRIS de Vivaldi mediante
+`playerctl`.
 
 Fuente: `docs/modulos/keybinds.md`.
 

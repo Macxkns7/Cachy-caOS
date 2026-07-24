@@ -1,0 +1,67 @@
+#!/bin/sh
+
+set -eu
+
+umask 077
+
+if [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+    runtime_dir="$XDG_RUNTIME_DIR/nest-media-hangup"
+else
+    runtime_dir="/tmp/nest-media-hangup-$(id -u)"
+fi
+state_file="$runtime_dir/pending"
+lock_file="$runtime_dir/lock"
+window_ms="${NEST_MEDIA_DOUBLE_TAP_MS:-400}"
+settle_seconds="${NEST_MEDIA_SETTLE_SECONDS:-0.42}"
+playerctl_bin="${NEST_PLAYERCTL_BIN:-playerctl}"
+
+case "$window_ms" in
+    *[!0-9]*|"")
+        echo "NEST_MEDIA_DOUBLE_TAP_MS debe ser un entero." >&2
+        exit 2
+        ;;
+esac
+
+command -v "$playerctl_bin" >/dev/null 2>&1 || {
+    echo "No se encontró playerctl." >&2
+    exit 127
+}
+
+mkdir -p "$runtime_dir"
+now="$(date +%s%3N)"
+token="$$-$now"
+
+exec 9>"$lock_file"
+flock -x 9
+
+if [ -s "$state_file" ]; then
+    read -r previous_token previous_time < "$state_file"
+    delta=$((now - previous_time))
+
+    if [ "$delta" -ge 0 ] && [ "$delta" -le "$window_ms" ]; then
+        rm -f "$state_file"
+        flock -u 9
+        "$playerctl_bin" previous
+        exit 0
+    fi
+fi
+
+printf "%s %s\n" "$token" "$now" > "$state_file"
+flock -u 9
+
+sleep "$settle_seconds"
+
+flock -x 9
+if [ -s "$state_file" ]; then
+    read -r current_token current_time < "$state_file"
+
+    if [ "$current_token" = "$token" ]; then
+        rm -f "$state_file"
+        flock -u 9
+        "$playerctl_bin" next
+        exit 0
+    fi
+fi
+
+flock -u 9
+exit 0

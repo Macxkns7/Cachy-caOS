@@ -1,7 +1,7 @@
 # Módulo Keybinds
 
-**Estado:** v0.5 implementada; 55 atajos migrados y pulsación larga en prueba
-**Última revisión:** 2026-07-23
+**Estado:** v0.6 implementada; 55 atajos migrados y teclas telefónicas validadas
+**Última revisión:** 2026-07-24
 
 ## Propósito
 
@@ -126,7 +126,7 @@ evento kernel/evdev observado
 evento XKB observado
 keycode XKB, cuando sea necesario
 modificadores
-evento: press | release | repeat
+evento: press | release | repeat | long_press
 acción lógica
 proveedor preferido
 comando resuelto
@@ -379,7 +379,7 @@ F9 / ayuda                  → Character Picker de Noctalia
 F12 / calculadora           → Galculator
 Cambio de pantalla          → pendiente de probar con monitor externo
 F10 / contestar llamada     → XF86PickupPhone; reproducir o pausar
-F11 / finalizar llamada     → XF86HangupPhone; siguiente / anterior al mantener
+F11 / finalizar llamada     → XF86HangupPhone; siguiente / doble toque anterior
 ⭐ Special Key              → pendiente de detectar; candidata a notificaciones
 ```
 
@@ -678,7 +678,7 @@ escritura, IDs deterministas, idempotencia, rechazo atómico de acciones
 incompatibles, bloqueo de conflictos del lote y habilitación completa sólo
 cuando el origen externo ya fue retirado.
 
-## Hito v0.5: pulsaciones largas y teclas de llamada
+## Hito v0.5: hipótesis de pulsación larga
 
 La auditoría con `wev` identificó las dos teclas telefónicas del Lenovo
 ThinkBook 13s G2:
@@ -688,7 +688,7 @@ key 453 → XF86PickupPhone
 key 454 → XF86HangupPhone
 ```
 
-La distribución definida es:
+La primera distribución propuesta fue:
 
 ```text
 XF86PickupPhone · press       → playerctl play-pause
@@ -696,30 +696,108 @@ XF86HangupPhone · press       → playerctl next
 XF86HangupPhone · long_press  → playerctl previous
 ```
 
-Se eligió `long_press` en lugar de doble pulsación porque Hyprland lo soporta
-de forma nativa. La doble pulsación requeriría mantener estado y temporizadores
-externos, además de retrasar la acción de pista siguiente.
-
 N.E.S.T. v0.5 incorpora:
 
 - `long_press` como cuarto evento del manifiesto;
 - generación de `long_press = true` en Lua;
-- detección de `longPress` en JSON y del sufijo `o` en la salida textual;
+- detección de `longPress` en JSON;
 - reconocimiento legible de las teclas de contestar y finalizar llamada;
 - convivencia válida entre `press` y `long_press` para una misma combinación;
 - conflictos externos comparados por combinación **y evento**;
 - creación y edición visual de registros con pulsación larga;
 - pruebas de generación, inventario, colisiones y regresión.
 
-El soporte de código está validado de forma aislada. La instalación de v0.5 y
-la prueba con las teclas físicas constituyen la validación operativa pendiente.
+La prueba física invalidó la hipótesis para `XF86HangupPhone`. Mantener la
+tecla durante dos segundos produjo:
+
+```text
+KEY_HANGUP_PHONE pressed  +3.818s
+KEY_HANGUP_PHONE released +3.818s
+```
+
+El firmware/controlador `ideapad-extra-buttons` informa ambos estados con el
+mismo tiempo. Hyprland recibe un toque instantáneo y nunca puede alcanzar el
+umbral de `long_press`; cambiar el orden de los dos bindings no modifica esa
+evidencia.
+
+Además, Hyprland 0.56 omitió el atributo de pulsación larga en la salida
+textual de `hyprctl binds`, mientras que `hyprctl binds -j` entregó JSON
+inválido. La detección correcta combina los registros textuales con la lista
+ordenada de booleanos `longPress` recuperada del JSON corrupto.
+
+## Hito v0.6: doble toque portable y runtime reconciliado
+
+La asignación finalmente validada es:
+
+```text
+XF86PickupPhone · press       → playerctl play-pause
+XF86HangupPhone · un toque    → playerctl next
+XF86HangupPhone · doble toque → playerctl previous
+```
+
+El ayudante `nest-media-hangup`:
+
+- espera 420 ms antes de ejecutar `next`;
+- reconoce un segundo toque dentro de 400 ms;
+- cancela el avance pendiente y ejecuta `previous`;
+- guarda estado efímero en `$XDG_RUNTIME_DIR`;
+- usa `flock` para que dos procesos no corrompan la decisión;
+- permite ajustar la ventana mediante `NEST_MEDIA_DOUBLE_TAP_MS`;
+- requiere `playerctl`.
+
+N.E.S.T. lo instala en:
+
+```text
+~/.local/share/cachycaos/modules/keybinds/helpers/nest-media-hangup
+```
+
+La acción `helper` del manifiesto convierte ese nombre en una ruta absoluta.
+Esto es necesario porque el proceso real de Hyprland no incluía
+`~/.local/bin` en `PATH`: el mismo comando funcionaba desde Fish y fallaba al
+ser lanzado por el compositor.
+
+Registro recomendado:
+
+```toml
+[[bind]]
+id = "media.phone.next-or-previous"
+enabled = true
+modifiers = []
+key = "XF86HangupPhone"
+category = "Multimedia"
+description = "Siguiente pista; doble toque para anterior"
+action = "helper"
+argument = "nest-media-hangup"
+event = "press"
+locked = true
+```
+
+Durante la validación apareció una segunda diferencia entre disco y runtime:
+actualizar `keybinds.lua` y ejecutar `hyprctl reload` dejó vivos los callbacks
+Lua anteriores porque el módulo seguía almacenado en `package.loaded`. El
+archivo mostraba el ayudante nuevo, pero `hyprctl binds` todavía enumeraba
+`next` y `long_press`.
+
+El nuevo `apply` reconcilia ambos estados:
+
+```text
+combinaciones antiguas ∪ nuevas
+→ hl.unbind de todos los callbacks administrados
+→ invalidar package.loaded["cachycaos.keybinds"]
+→ require del módulo nuevo
+→ validar configerrors
+→ rollback de archivo y runtime si falla
+```
+
+La corrección se comprobó primero dinámicamente con `hyprctl eval` y luego con
+las teclas físicas. Resultado final: reproducir/pausar, siguiente y doble toque
+para anterior funcionan en el Lenovo ThinkBook 13s G2.
 
 ## Pendientes
 
 - ampliar el esquema con hardware, proveedor y evidencia de detección;
 - implementar resolución por adaptadores;
 - detectar y configurar la ⭐ Special Key;
-- instalar y validar las asignaciones F10/F11 de llamadas;
 - validar cambio de pantalla con monitor externo;
 - convertir `wev` en un asistente guiado;
 - inventariar dispositivos y teclas automáticamente;

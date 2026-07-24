@@ -2,7 +2,7 @@
 
 Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 
-## Alcance de v0.5
+## Alcance de v0.6
 
 - inventaría los bindings activos y sigue módulos Lua cargados con `require`;
 - tolera el JSON inválido de Hyprland 0.56 mediante fallback automático a
@@ -12,7 +12,7 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
 - genera un archivo Lua dedicado desde `data/binds.toml`;
 - muestra un diff antes de instalar;
 - respalda el archivo administrado;
-- recarga y valida Hyprland;
+- reconcilia los callbacks Lua activos y valida Hyprland;
 - restaura automáticamente el estado previo si la validación falla;
 - permite verificación y rollback explícitos;
 - muestra el archivo fuente real de cada binding, incluido el módulo
@@ -28,8 +28,12 @@ Fuente canónica del módulo de atajos administrados de Cachy-caOS.
   activa fuera del archivo administrado;
 - diferencia `press` y `long_press` sobre una misma tecla sin tratarlos como
   una colisión;
-- detecta pulsaciones largas tanto desde el JSON como desde el fallback
-  textual de `hyprctl binds`;
+- recupera `longPress` desde el JSON corrupto de Hyprland 0.56 y lo combina
+  con los datos fiables de su salida textual;
+- instala ayudantes administrados y siempre los invoca mediante una ruta
+  absoluta, independiente del `PATH` heredado por Hyprland;
+- incluye un ayudante de doble toque validado para teclas cuyo firmware no
+  emite una pulsación sostenida;
 - conserva un respaldo independiente antes de cada cambio del manifiesto.
 
 N.E.S.T. sólo administra:
@@ -70,8 +74,8 @@ cachycaos-keybinds rollback
 ```
 
 `apply` no solicita confirmación en modo CLI; la interfaz interactiva sí muestra
-el plan y pide aprobación. En ambos casos, una recarga inválida activa rollback
-automático.
+el plan y pide aprobación. En ambos casos, una reconciliación inválida activa
+rollback automático.
 
 ## Manifiesto
 
@@ -86,13 +90,14 @@ Cada `[[bind]]` admite:
 | `event` | `press`, `release`, `repeat` o `long_press` |
 | `locked` | permite uso con la sesión bloqueada |
 | `mouse` | marca bindings de mouse |
-| `action` | acción lógica soportada o `exec` |
+| `action` | acción lógica soportada, `exec` o `helper` |
 | `argument` | valor obligatorio para acciones parametrizadas |
 
-Las acciones administradas en v0.5 son:
+Las acciones administradas en v0.6 son:
 
 ```text
 exec
+helper
 layout
 focus
 workspace.focus
@@ -110,9 +115,67 @@ window.move
 activada por omisión, especialmente en volumen y brillo.
 
 `long_press` genera `long_press = true` y puede convivir con un registro
-`press` que use la misma combinación. Esto permite asignar una acción a la
-pulsación breve y otra al mantener la tecla sin scripts ni temporizadores
-externos.
+`press` que use la misma combinación, pero sólo funciona cuando el dispositivo
+entrega una pulsación sostenida real. Debe comprobarse con
+`libinput debug-events --show-keycodes`: si firmware y controlador emiten
+`pressed` y `released` con el mismo tiempo, reordenar bindings no puede crear
+una pulsación larga.
+
+`helper` recibe el nombre de un ejecutable instalado en:
+
+```text
+~/.local/share/cachycaos/modules/keybinds/helpers/
+```
+
+El generador escribe su ruta absoluta en Lua. Esto evita que una orden funcione
+en la terminal y falle desde Hyprland porque el compositor no heredó
+`~/.local/bin` en su `PATH`.
+
+### Teclas de llamada del Lenovo ThinkBook
+
+El ayudante `nest-media-hangup` implementa la alternativa validada para
+`XF86HangupPhone`:
+
+```text
+un toque       → espera 420 ms → playerctl next
+segundo toque  → dentro de 400 ms → playerctl previous
+```
+
+El estado vive únicamente en `$XDG_RUNTIME_DIR`, se serializa con `flock` y
+desaparece tras resolver la acción. Un ejemplo de manifiesto es:
+
+```toml
+[[bind]]
+id = "media.phone.next-or-previous"
+enabled = true
+modifiers = []
+key = "XF86HangupPhone"
+category = "Multimedia"
+description = "Siguiente pista; doble toque para anterior"
+action = "helper"
+argument = "nest-media-hangup"
+event = "press"
+locked = true
+```
+
+Requiere `playerctl`. El intervalo puede ajustarse con
+`NEST_MEDIA_DOUBLE_TAP_MS`; el valor comprobado es 400 ms.
+
+## Reconciliación del runtime Lua
+
+Hyprland puede conservar callbacks creados por un módulo cargado con
+`require("cachycaos.keybinds")` aunque el archivo en disco cambie. Por eso
+`apply` ya no confía únicamente en `hyprctl reload`:
+
+1. calcula la unión de combinaciones antiguas y nuevas;
+2. ejecuta `hl.unbind(...)` para retirar todos sus callbacks previos;
+3. invalida `package.loaded["cachycaos.keybinds"]`;
+4. vuelve a cargar el módulo administrado;
+5. consulta `hyprctl configerrors`;
+6. restaura el archivo y el runtime anteriores si algo falla.
+
+Así, el archivo instalado y el comportamiento activo cambian como una sola
+operación recuperable.
 
 ## Pruebas
 
@@ -122,12 +185,14 @@ bash tests/run.sh
 
 La prueba incluye un rechazo simulado de Hyprland y comprueba que el archivo
 anterior se restaura byte por byte. También reproduce la salida JSON corrupta
-observada en Hyprland 0.56 y valida la recuperación desde el formato textual.
+observada en Hyprland 0.56, recupera los flags `longPress` en el mismo orden y
+los combina con el formato textual.
 Además cubre atribución por archivo fuente, importación individual y masiva
 deshabilitada, IDs deterministas, idempotencia, cancelación atómica ante una
 acción incompatible, bloqueo global de colisiones externas, edición del
-manifiesto, los doce tipos de acciones administradas y la convivencia segura
-entre `press` y `long_press`.
+manifiesto, acciones administradas, convivencia entre `press` y `long_press`,
+toque simple/doble del ayudante multimedia y la reconciliación explícita de
+callbacks Lua antiguos y nuevos.
 
 ## Flujo seguro de migración
 
