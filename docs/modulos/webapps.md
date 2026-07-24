@@ -134,6 +134,15 @@ el `require` ya está activo y Hyprland está disponible, el módulo recarga el
 compositor. Al desinstalar el router, conserva un adaptador vacío para no dejar
 una importación rota.
 
+El instalador de v0.3 despliega conjuntamente el router y la versión compatible
+del módulo padre `cachycaos-webapp`. Esto evita un estado parcial en el que el
+router está actualizado, pero crear una WebApp no ejecuta la sincronización
+automática. Antes de reemplazar el módulo padre se guarda un respaldo bajo:
+
+```text
+~/.local/share/cachycaos/webapps/backups/webapps-app-<fecha>.sh
+```
+
 Una WebApp puede excluirse sin ser eliminada:
 
 ```ini
