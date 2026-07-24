@@ -1,0 +1,118 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  background: #100b18;
+  color: #eee6ff;
+}
+
+body {
+  box-sizing: border-box;
+  margin: 0;
+  min-width: 360px;
+}
+
+main {
+  padding: 18px;
+}
+
+header {
+  border-bottom: 1px solid #4a3866;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+}
+
+.eyebrow {
+  color: #b48cff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 21px;
+  margin-top: 3px;
+}
+
+h2 {
+  font-size: 13px;
+}
+
+header p {
+  color: #b9accd;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+section + section {
+  margin-top: 16px;
+}
+
+dl,
+.routes,
+.windows {
+  display: grid;
+  gap: 7px;
+  margin: 9px 0 0;
+}
+
+dl div,
+.route,
+.window {
+  background: #1b1228;
+  border: 1px solid #36264d;
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+dt {
+  color: #aa98c3;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.section-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+button {
+  background: #8f64d8;
+  border: 0;
+  border-radius: 6px;
+  color: #100b18;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 5px 9px;
+}
+
+.route strong,
+.route span,
+.window strong,
+.window span {
+  display: block;
+}
+
+.route span,
+.window span {
+  color: #c8bcdc;
+  font-size: 11px;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: #aa98c3;
+  font-size: 12px;
+}

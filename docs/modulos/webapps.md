@@ -1,8 +1,8 @@
 # Módulo WebApps
 
 **Estado:** En desarrollo y funcional  
-**Versión validada:** v0.6 Beta  
-**Última revisión:** 2026-07-16
+**Versión validada:** v0.7 Beta + WebApp Router v0.3
+**Última revisión:** 2026-07-24
 
 ## Propósito
 
@@ -13,6 +13,8 @@ Permitir crear, lanzar, listar, reparar y eliminar aplicaciones web integradas a
 ```text
 src/bin/cachycaos-webapp
 src/modules/webapps/app.sh
+src/bin/cachycaos-webapp-router
+src/modules/webapps/router/
 ```
 
 El futuro instalador debe desplegarlos como:
@@ -23,6 +25,12 @@ src/bin/cachycaos-webapp
 
 src/modules/webapps/app.sh
   → ~/.local/share/cachycaos/modules/webapps/app.sh
+
+src/bin/cachycaos-webapp-router
+  → ~/.local/bin/cachycaos-webapp-router
+
+src/modules/webapps/router/
+  → ~/.local/share/cachycaos/modules/webapps/router/
 ```
 
 ## Estado actual
@@ -59,6 +67,144 @@ Rutas de ejecución y datos:
 - regenerar o reemplazar `StartupWMClass` sin duplicarlo;
 - actualizar la base XDG de aplicaciones;
 - solicitar recarga del dock de Noctalia cuando está disponible.
+- sincronizar opcionalmente el registro de dominios del WebApp Router.
+
+## WebApp Router v0.3
+
+La prueba real con la PWA nativa de YouTube Music confirmó que una extensión
+Manifest V3 puede recibir un enlace abierto mediante `xdg-open`, localizar la
+ventana WebApp existente, navegarla y enfocarla, y cerrar después la pestaña
+normal intermediaria.
+
+La implementación actual conserva y amplía ese mecanismo:
+
+1. descubre `cachycaos-webapp-*.desktop`;
+2. exige `X-CachycaOS-WebApp=true`;
+3. obtiene la URL desde `X-CachycaOS-WebApp-URL`;
+4. reduce cada URL a su origen canónico;
+5. elimina dominios duplicados;
+6. genera `routes.json`;
+7. genera permisos mínimos en `manifest.json`;
+8. genera reglas exactas de activación para Hyprland;
+9. sincroniza automáticamente al crear, reparar o eliminar una WebApp.
+
+La validación multi-WebApp confirmó el enrutamiento hacia ChatGPT, GitHub y
+YouTube Music sin duplicar ventanas. Cuando la WebApp de GitHub estaba en otro
+workspace, Vivaldi navegaba correctamente la ventana existente pero Hyprland no
+le entregaba el foco.
+
+### Activación entre workspaces
+
+La causa no estaba en el router: Hyprland exponía
+`misc.focus_on_activate=false`, su política global segura. La extensión podía
+activar la pestaña y solicitar foco para su ventana, pero el compositor evitaba
+el cambio de workspace.
+
+WebApp Router v0.3 genera:
+
+```text
+~/.config/hypr/cachycaos/webapps.lua
+```
+
+El archivo contiene una regla limitada al dominio exacto de cada WebApp:
+
+```lua
+hl.window_rule({
+    name = "nest-webapp-github-focus",
+    match = {
+        class = "^vivaldi-github[.]com__.*-Default$",
+    },
+    focus_on_activate = true,
+})
+```
+
+La configuración principal solo debe cargar el adaptador:
+
+```lua
+require("cachycaos.webapps")
+```
+
+N.E.S.T. no cambia globalmente `misc.focus_on_activate`. Por ello una
+aplicación común no obtiene permiso para robar el foco; solamente el espacio de
+clases del dominio exacto de cada WebApp registrada puede activar su ventana y
+mover al usuario al workspace que la contiene.
+
+### Rutas iniciales y clase de Vivaldi
+
+La prueba con Crunchyroll reveló una diferencia que no aparece en WebApps cuya
+URL inicial es la raíz del sitio:
+
+```text
+URL registrada: https://www.crunchyroll.com/es/discover
+StartupWMClass: vivaldi-www.crunchyroll.com__-Default
+Clase real:     vivaldi-www.crunchyroll.com__es_discover-Default
+```
+
+Vivaldi/Chromium incorpora la ruta inicial al sufijo de la clase de las
+ventanas `--app`. Una regla que copiara literalmente `StartupWMClass` podría
+enrutar correctamente el enlace, pero Hyprland no concedería foco a la ventana
+real.
+
+WebApp Router v0.3.1 genera por ello:
+
+```lua
+class = "^vivaldi-www[.]crunchyroll[.]com__.*-Default$"
+```
+
+El comodín no abarca otros sitios: el hostname permanece escapado, completo y
+anclado entre el prefijo `vivaldi-` y el separador `__`. Solamente varía el
+sufijo de ruta perteneciente al mismo dominio. La prueba real confirmó tanto la
+navegación dentro de la WebApp existente como el cambio al workspace que la
+contenía.
+
+Al sincronizar el registro, el archivo Lua se regenera de forma idempotente. Si
+el `require` ya está activo y Hyprland está disponible, el módulo recarga el
+compositor. Al desinstalar el router, conserva un adaptador vacío para no dejar
+una importación rota.
+
+El instalador de v0.3 despliega conjuntamente el router y la versión compatible
+del módulo padre `cachycaos-webapp`. Esto evita un estado parcial en el que el
+router está actualizado, pero crear una WebApp no ejecuta la sincronización
+automática. Antes de reemplazar el módulo padre se guarda un respaldo bajo:
+
+```text
+~/.local/share/cachycaos/webapps/backups/webapps-app-<fecha>.sh
+```
+
+Una WebApp puede excluirse sin ser eliminada:
+
+```ini
+X-CachycaOS-WebApp-Router=false
+```
+
+Las entradas antiguas que omiten esa clave participan por defecto.
+
+### Flujo de enrutamiento
+
+```text
+enlace externo
+→ Vivaldi crea una pestaña normal
+→ la extensión reconoce un origen registrado
+→ busca otra ventana popup/app del mismo origen
+→ navega y enfoca la WebApp existente
+→ cierra la pestaña intermediaria
+```
+
+Si el destino no existe, es ambiguo o produce un error, la pestaña normal
+permanece abierta.
+
+### Sincronización y permisos
+
+```bash
+cachycaos-webapp-router sync
+```
+
+El manifiesto solo solicita acceso a los dominios actualmente administrados.
+Cuando esos permisos cambian, Vivaldi debe recargar manualmente la extensión
+desde `vivaldi://extensions`.
+
+El router no modifica los manejadores globales HTTP/HTTPS y no usa Remote
+Debugging ni simulación de teclado.
 
 ## Flujo funcional
 
@@ -152,6 +298,11 @@ La reparación fue validada eliminando manualmente `StartupWMClass` de ChatGPT y
 - Persistencia tras recargar el dock.
 - Recuperación automática de una clave eliminada.
 - Ausencia de segunda instancia con engranaje.
+- Registro de seis dominios administrados con permisos mínimos.
+- Reutilización real de ChatGPT, GitHub y YouTube Music.
+- Navegación de GitHub dentro de una WebApp situada en otro workspace.
+- Cambio de workspace y foco mediante una regla exclusiva por clase.
+- Conservación de `misc.focus_on_activate=false` a nivel global.
 
 ## Lecciones de rutas e instalación
 
